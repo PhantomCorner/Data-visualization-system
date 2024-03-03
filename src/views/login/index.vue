@@ -99,13 +99,12 @@ export default {
             setTimeout(() => {
               this.$router.push({ path: this.redirect || '/' })
               this.loading = false
-            }, 3000);
-
+            }, 1500);
           }).catch(() => {
             this.loading = false
           })
         } else {
-          console.log('error submit!!')
+          this.$message.error('error')
           return false
         }
       })
