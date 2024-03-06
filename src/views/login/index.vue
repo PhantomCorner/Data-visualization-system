@@ -28,10 +28,10 @@
 
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;"
         @click.native.prevent="handleLogin">Login</el-button>
-
-      <!-- <div class="tips">
-
-      </div> -->
+      <div class="tips">
+        <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;"
+          @click.native.prevent="handleRegister">Register</el-button>
+      </div>
 
     </el-form>
   </div>
@@ -39,6 +39,7 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
+import { register } from '@/api/user'
 
 export default {
   name: 'Login',
@@ -108,8 +109,18 @@ export default {
           return false
         }
       })
+    },
+    handleRegister() {
+      try {
+        register()
+      }
+      catch {
+        this.$message.error('error')
+      }
+
     }
   }
+
 }
 </script>
 

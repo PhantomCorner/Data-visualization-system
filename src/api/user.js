@@ -22,3 +22,9 @@ export function logout() {
     method: 'post'
   })
 }
+export function register() {
+  return request({
+    url: '/user/register',
+    method: 'post'
+  })
+}
