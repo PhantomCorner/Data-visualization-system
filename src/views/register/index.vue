@@ -1,16 +1,16 @@
 <template>
   <div class="login-container" v-loading="loading">
     <el-form
-      ref="loginForm"
-      :model="loginForm"
-      :rules="loginRules"
+      ref="registerForm"
+      :model="registerForm"
+      :rules="Rules"
       class="login-form"
       auto-complete="on"
       label-position="left"
     >
       <div class="title-container">
         <h2 class="title">COMPX576 Project</h2>
-        <h3 class="title">Login Form</h3>
+        <h3 class="title">Register Form</h3>
       </div>
 
       <el-form-item prop="username">
@@ -19,7 +19,7 @@
         </span>
         <el-input
           ref="username"
-          v-model="loginForm.username"
+          v-model="registerForm.username"
           placeholder="Username"
           name="username"
           type="text"
@@ -35,7 +35,7 @@
         <el-input
           :key="passwordType"
           ref="password"
-          v-model="loginForm.password"
+          v-model="registerForm.password"
           :type="passwordType"
           placeholder="Password"
           name="password"
@@ -54,16 +54,16 @@
         :loading="loading"
         type="primary"
         style="width: 100%; margin-bottom: 30px"
-        @click.native.prevent="handleLogin"
-        >Login</el-button
+        @click.native.prevent="handleRegister"
+        >Create Account</el-button
       >
       <div class="tips">
         <el-button
           :loading="loading"
           type="primary"
           style="width: 100%; margin-bottom: 30px"
-          @click.native.prevent="handleRegister"
-          >Register</el-button
+          @click.native.prevent="toLogin"
+          >Back</el-button
         >
       </div>
     </el-form>
@@ -75,7 +75,7 @@ import { validUsername } from "@/utils/validate";
 import { register } from "@/api/user";
 
 export default {
-  name: "Login",
+  name: "Register",
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
@@ -92,11 +92,11 @@ export default {
       }
     };
     return {
-      loginForm: {
+      registerForm: {
         username: "admin",
         password: "111111",
       },
-      loginRules: {
+      Rules: {
         username: [
           { required: true, trigger: "blur", validator: validateUsername },
         ],
@@ -128,37 +128,17 @@ export default {
         this.$refs.password.focus();
       });
     },
-    handleLogin() {
-      this.$refs.loginForm.validate((valid) => {
-        if (valid) {
-          this.$store
-            .dispatch("user/login", this.loginForm)
-            .then(() => {
-              this.$message.success("Login success");
-              this.loading = true;
-              setTimeout(() => {
-                this.$router.push({ path: this.redirect || "/" });
-                this.loading = false;
-              }, 1500);
-            })
-            .catch(() => {
-              this.loading = false;
-            });
-        } else {
-          this.$message.error("error");
-          return false;
-        }
-      });
-    },
-    handleRegister() {
-      this.redirect = "register";
+    toLogin() {
+      this.redirect = "login";
       this.$router.push({ path: this.redirect || "/" });
       this.redirect = "";
-      // try {
-      //   register();
-      // } catch {
-      //   this.$message.error("error");
-      // }
+    },
+    handleRegister() {
+      try {
+        register();
+      } catch {
+        this.$message.error("error");
+      }
     },
   },
 };
