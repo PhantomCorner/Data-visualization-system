@@ -79,7 +79,7 @@ export default {
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
-        callback(new Error("Please enter the correct user name"));
+        callback(new Error("Please enter a correct user name"));
       } else {
         callback();
       }
@@ -93,8 +93,8 @@ export default {
     };
     return {
       registerForm: {
-        username: "admin",
-        password: "111111",
+        username: "",
+        password: "",
       },
       Rules: {
         username: [
@@ -134,11 +134,15 @@ export default {
       this.redirect = "";
     },
     handleRegister() {
-      try {
-        register();
-      } catch {
-        this.$message.error("error");
-      }
+      this.$refs.registerForm.validate((valid) => {
+        if (valid) {
+          register(this.registerForm).then(() => {
+            this.$message.success("Register success");
+          });
+        } else {
+          this.$message.error("Please check your input");
+        }
+      });
     },
   },
 };

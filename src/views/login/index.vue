@@ -154,11 +154,6 @@ export default {
       this.redirect = "register";
       this.$router.push({ path: this.redirect || "/" });
       this.redirect = "";
-      // try {
-      //   register();
-      // } catch {
-      //   this.$message.error("error");
-      // }
     },
   },
 };
