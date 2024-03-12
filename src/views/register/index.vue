@@ -71,7 +71,6 @@
 </template>
 
 <script>
-import { validUsername } from "@/utils/validate";
 import { register } from "@/api/user";
 
 export default {
