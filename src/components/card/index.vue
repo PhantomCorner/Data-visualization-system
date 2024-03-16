@@ -21,7 +21,7 @@
               </div>
             </slot>
           </div>
-          <div class="dragCard_body" :id="`cardChart_${index}`">
+          <div class="dragCard_body" :id="`cardChart${index}`">
             <!-- <slot name="content" :item="item">
               <div class="dragCard_body-defaut">
                 {{ item.content ? item.content : `No data` }}
@@ -76,74 +76,62 @@ export default {
     },
   },
   mounted() {
-    console.log(document.getElementById("card_content"));
-    this.card_chart = echarts.init(document.getElementById("card_content"));
+    // this.card_chart = echarts.init(document.getElementById("cardChart"));
     this.initChart();
   },
   methods: {
     init() {
-      // 根据数组的长度length和每行个数col，可以计算出需要多少行row，超出不满一行算一行，用ceil向上取整；
       this.row = Math.ceil(this.list.length / this.col);
-      // 计算出容器的宽高
       this.dragCardWarpperStyle = `width: ${
         this.col * this.itemWidth
       }px; height:${this.row * this.itemHeight}px`;
-      /*
-       * 这里处理下数组，引入两个重要的属性：
-       * dragCard_id：
-       *   给每一个卡片创建一个唯一id，作为ref值，后续通过this.$refs[dragCard_id]获取卡片的dom
-       * dragCard_index：
-       *   这是每个卡片的位置序号，用于记录卡片当前位置
-       * */
-      this.list.forEach((item, index) => {
-        this.$set(item, "dragCard_index", index);
-        this.$set(item, "dragCard_id", "dragCard_id" + index);
-        this.initChart();
-      });
     },
     initChart() {
-      this.card_chart.setOption({
-        title: {
-          text: "Traffic Sources",
-          left: "center",
-        },
-        tooltip: {
-          trigger: "item",
-          formatter: "{a} <br/>{b} : {c} ({d}%)",
-        },
-        legend: {
-          orient: "vertical",
-          left: "left",
-          data: [
-            "Direct",
-            "Email",
-            "Ad Networks",
-            "Video Ads",
-            "Search Engines",
-          ],
-        },
-        series: [
-          {
-            name: "Traffic Sources",
-            type: "pie",
-            radius: "55%",
-            center: ["50%", "60%"],
+      this.list.forEach((item, index) => {
+        let chart = echarts.init(document.getElementById(`cardChart${index}`));
+        chart.setOption({
+          title: {
+            text: "Traffic Sources",
+            left: "center",
+          },
+          tooltip: {
+            trigger: "item",
+            formatter: "{a} <br/>{b} : {c} ({d}%)",
+          },
+          legend: {
+            orient: "vertical",
+            left: "left",
             data: [
-              { value: 335, name: "Direct" },
-              { value: 310, name: "Email" },
-              { value: 234, name: "Ad Networks" },
-              { value: 135, name: "Video Ads" },
-              { value: 1548, name: "Search Engines" },
+              "Direct",
+              "Email",
+              "Ad Networks",
+              "Video Ads",
+              "Search Engines",
             ],
-            emphasis: {
-              itemStyle: {
-                shadowBlur: 10,
-                shadowOffsetX: 0,
-                shadowColor: "rgba(0, 0, 0, 0.5)",
+          },
+          series: [
+            {
+              name: "Traffic Sources",
+              type: "pie",
+              radius: "55%",
+              center: ["50%", "60%"],
+              data: [
+                { value: 335, name: "Direct" },
+                { value: 310, name: "Email" },
+                { value: 234, name: "Ad Networks" },
+                { value: 135, name: "Video Ads" },
+                { value: 1548, name: "Search Engines" },
+              ],
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: "rgba(0, 0, 0, 0.5)",
+                },
               },
             },
-          },
-        ],
+          ],
+        });
       });
     },
     initItemStyle(INDEX) {

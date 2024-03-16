@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-container">
     <div class="dashboard-text">Current User: {{ name }}</div>
-    <DragCard :list="list" :col="4" :itemWidth="350" :itemHeight="350">
+    <DragCard :list="list" :col="3" :itemWidth="350" :itemHeight="350">
     </DragCard>
   </div>
 </template>
@@ -24,6 +24,9 @@ export default {
         { head: "0", content: "Card 0" },
         { head: "1", content: "Card 1" },
         { head: "2", content: "Card 2" },
+        { head: "3", content: "Card 0" },
+        { head: "4", content: "Card 1" },
+        { head: "5", content: "Card 2" },
       ],
     };
   },
