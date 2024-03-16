@@ -1,6 +1,9 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">Current User: {{ name }}</div>
+    <div class="dashboard-text">
+      Current User: {{ name }}
+      <el-button type="info" @click="addCard">Add</el-button>
+    </div>
     <DragCard :list="list" :col="3" :itemWidth="350" :itemHeight="350">
     </DragCard>
   </div>
@@ -21,14 +24,25 @@ export default {
   data() {
     return {
       list: [
-        { head: "0", content: "Card 0" },
-        { head: "1", content: "Card 1" },
-        { head: "2", content: "Card 2" },
-        { head: "3", content: "Card 0" },
-        { head: "4", content: "Card 1" },
-        { head: "5", content: "Card 2" },
+        { head: 0, content: "Card 0" },
+        { head: 1, content: "Card 1" },
+        { head: 2, content: "Card 2" },
+        { head: 3, content: "Card 3" },
+        { head: 4, content: "Card 4" },
+        { head: 5, content: "Card 5" },
       ],
     };
+  },
+  methods: {
+    addCard() {
+      console.log(this.list);
+      let last = this.list[this.list.length - 1];
+      console.log(last);
+      this.list.push({
+        head: last.head + 1,
+        content: `Card ${last.head + 1}`,
+      });
+    },
   },
 };
 </script>

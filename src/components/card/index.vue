@@ -17,7 +17,7 @@
           <div class="dragCard_head" @mousedown="handleMousedown($event, item)">
             <slot name="head" :item="item">
               <div class="dragCard_head-defaut">
-                {{ item.head ? item.head : `Title ${index}` }}
+                {{ item.content }}
               </div>
             </slot>
           </div>
@@ -85,6 +85,10 @@ export default {
       this.dragCardWarpperStyle = `width: ${
         this.col * this.itemWidth
       }px; height:${this.row * this.itemHeight}px`;
+      this.list.forEach((item, index) => {
+        this.$set(item, "dragCard_index", index);
+        this.$set(item, "dragCard_id", "dragCard_id" + index);
+      });
     },
     initChart() {
       this.list.forEach((item, index) => {
