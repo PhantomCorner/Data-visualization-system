@@ -29,3 +29,9 @@ export function register(data) {
     data,
   });
 }
+export function getDataSource() {
+  return request({
+    url: "/dataSource/allFile",
+    method: "get",
+  });
+}

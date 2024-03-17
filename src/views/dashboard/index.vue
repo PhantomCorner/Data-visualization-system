@@ -2,7 +2,7 @@
   <div class="dashboard-container">
     <div class="dashboard-text">
       Current User: {{ name }}
-      <el-button type="info" @click="addCard">Add</el-button>
+      <el-button type="info" @click="addCard">Add card</el-button>
     </div>
     <DragCard :list="list" :col="3" :itemWidth="350" :itemHeight="350">
     </DragCard>
@@ -35,9 +35,7 @@ export default {
   },
   methods: {
     addCard() {
-      console.log(this.list);
       let last = this.list[this.list.length - 1];
-      console.log(last);
       this.list.push({
         head: last.head + 1,
         content: `Card ${last.head + 1}`,
