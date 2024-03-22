@@ -4,7 +4,7 @@
       Current User: {{ name }}
       <el-button type="info" @click="addCard">Add card</el-button>
     </div>
-    <DragCard :list="list" :col="3" :itemWidth="350" :itemHeight="350">
+    <DragCard :list="list" :col="3" :itemWidth="400" :itemHeight="200">
     </DragCard>
   </div>
 </template>
