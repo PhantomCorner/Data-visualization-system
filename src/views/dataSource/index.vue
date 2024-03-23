@@ -45,10 +45,9 @@ export default {
   data() {
     return {
       s3: new AWS.S3({
-        // AWS 认证相关
         apiVersion: "2006-03-01",
-        accessKeyId: "AKIAZCDNE7PXZPG5ZTX2",
-        secretAccessKey: "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",
+        accessKeyId: "",
+        secretAccessKey: "",
         region: "ap-southeast-2",
       }),
       tableData: null,
