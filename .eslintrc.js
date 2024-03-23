@@ -1,32 +1,26 @@
 module.exports = {
-    "env": {
-        "browser": true,
-        "es2020": true
+  env: {
+    browser: true,
+    es2020: true,
+  },
+  extends: ["eslint:recommended", "plugin:vue/vue3-essential"],
+  overrides: [
+    {
+      env: {
+        node: true,
+      },
+      files: [".eslintrc.{js,cjs}"],
+      parserOptions: {
+        sourceType: "script",
+      },
     },
-    "extends": [
-        "eslint:recommended",
-        "plugin:vue/vue3-essential"
-    ],
-    "overrides": [
-        {
-            "env": {
-                "node": true
-            },
-            "files": [
-                ".eslintrc.{js,cjs}"
-            ],
-            "parserOptions": {
-                "sourceType": "script"
-            }
-        }
-    ],
-    "parserOptions": {
-        "ecmaVersion": "latest",
-        "sourceType": "module"
+  ],
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
     },
-    "plugins": [
-        "vue"
-    ],
-    "rules": {
-    }
-}
+    ecmaVersion: 6,
+    sourceType: "module",
+  },
+  plugins: ["vue"],
+};

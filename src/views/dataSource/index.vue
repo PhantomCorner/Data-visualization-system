@@ -34,20 +34,17 @@
   </div>
 </template>
 <script>
+import { ak, ask } from "../../../ak.js";
 import AWS from "aws-sdk";
 import { getDataSource } from "@/api/user";
 export default {
   name: "DataSource",
-  // computed: {
-  //   ...mapGetters(["name"]),
-  // },
-
   data() {
     return {
       s3: new AWS.S3({
         apiVersion: "2006-03-01",
-        accessKeyId: "",
-        secretAccessKey: "",
+        accessKeyId: ak,
+        secretAccessKey: ask,
         region: "ap-southeast-2",
       }),
       tableData: null,
@@ -67,26 +64,18 @@ export default {
     handleFileChange(e) {
       let file = e.file;
       console.log("file change", file);
-
       if (file) {
-        this.videoFileName = file.name;
-        this.videoLoading = true;
-        this.videoSuffix = this.videoFileName.split(".")[1];
-
-        var key = new Date().getTime() + "_" + "." + this.videoSuffix;
+        // var key = new Date().toISOString() + "_" + "." + file.name;
         var params = {
-          Bucket: "compx576-bucket", // 存储桶名称
-          Key: key, // 文件名，重名会覆盖
+          Bucket: "compx576-bucket",
+          Key: file.name,
           Body: file,
         };
-        this.videoUpload = this.s3.upload(params, function (err, data) {
+        this.s3.upload(params, (err, data) => {
           if (err) {
-            console.log("发生错误：", err.code, err.message);
-            this.videoLoading = false;
+            this.$message.warning(`${err.code},${err.data}`);
           } else {
-            console.log("上传成功, 返回结果");
-            console.log(data);
-            console.log(data.Location); //上传文件在S3的位置
+            this.$message.success(`Upload success!`);
           }
         });
       }
