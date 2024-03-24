@@ -35,3 +35,10 @@ export function getDataSource() {
     method: "get",
   });
 }
+export function getFileContent(data) {
+  return request({
+    url: "/dataSource/getFile",
+    method: "post",
+    data,
+  });
+}
