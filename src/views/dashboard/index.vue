@@ -1,9 +1,12 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">
+    <!-- <div class="dashboard-text">
       Current User: {{ name }}
-      <el-button type="info" @click="addCard">Add card</el-button>
-    </div>
+    </div> -->
+    <router-link to="/createChart/all">
+      <el-button type="primary">Create new chart</el-button>
+    </router-link>
+    <!-- <el-button type="primary" @click="addCard">Creaet new chart</el-button> -->
     <DragCard :list="list" :col="3" :itemWidth="400" :itemHeight="200">
     </DragCard>
   </div>
@@ -34,6 +37,13 @@ export default {
     };
   },
   methods: {
+    createChart() {
+      let last = this.list[this.list.length - 1];
+      this.list.push({
+        head: last.head + 1,
+        content: `Card ${last.head + 1}`,
+      });
+    },
     addCard() {
       let last = this.list[this.list.length - 1];
       this.list.push({
@@ -48,9 +58,8 @@ export default {
 <style lang="scss" scoped>
 .dashboard {
   &-container {
-    margin: 30px;
+    margin: 15px;
   }
-
   &-text {
     font-size: 30px;
     line-height: 46px;

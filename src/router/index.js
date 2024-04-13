@@ -5,6 +5,7 @@ Vue.use(Router);
 
 /* Layout */
 import Layout from "@/layout";
+import { path } from "express/lib/application";
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -46,21 +47,47 @@ export const constantRoutes = [
     component: () => import("@/views/404"),
     hidden: true,
   },
-
   {
-    path: "/",
+    path: "/dashboard",
     component: Layout,
-    redirect: "/dashboard",
     children: [
       {
-        path: "dashboard",
-        name: "Dashboard",
+        path: "all",
+        name: "dashboard",
         component: () => import("@/views/dashboard/index"),
-        meta: { title: "Dashboard", icon: "dashboard" },
+        meta: { title: "Dashboard", icon: "el-icon-s-help" },
       },
     ],
   },
-
+  {
+    path: "/createChart",
+    component: Layout,
+    children: [
+      {
+        path: "all",
+        name: "CreateChart",
+        component: () => import("@/views/createChart/index"),
+      },
+    ],
+  },
+  // {
+  //   path: "/",
+  //   component: Layout,
+  //   redirect: "/dashboard",
+  //   children: [
+  //     {
+  //       path: "all",
+  //       name: "Dashboard",
+  //       component: () => import("@/views/dashboard/index"),
+  //       meta: { title: "Dashboard", icon: "dashboard" },
+  //     },
+  //     {
+  //       path: "createChart",
+  //       name: "createChart",
+  //       component: () => import("@/views/createChart/index"),
+  //     },
+  //   ],
+  // },
   {
     path: "/dataSource",
     component: Layout,
@@ -69,25 +96,32 @@ export const constantRoutes = [
         path: "all",
         name: "DataSource",
         component: () => import("@/views/dataSource/index"),
-        meta: { title: "Data Source", icon: "el-icon-s-help" },
+        meta: { title: "Data Source", icon: "nested" },
       },
     ],
-
-    // children: [
-    //   {
-    //     path: "table",
-    //     name: "Table",
-    //     component: () => import("@/views/table/index"),
-    //     meta: { title: "Table", icon: "table" },
-    //   },
-    //   {
-    //     path: "tree",
-    //     name: "Tree",
-    //     component: () => import("@/views/tree/index"),
-    //     meta: { title: "Tree", icon: "tree" },
-    //   },
-    // ],
   },
+
+  // {
+  //   path: "/example",
+  //   component: Layout,
+  //   redirect: "/example/table",
+  //   name: "Example",
+  //   meta: { title: "Example", icon: "el-icon-s-help" },
+  //   children: [
+  //     {
+  //       path: "table",
+  //       name: "Table",
+  //       component: () => import("@/views/table/index"),
+  //       meta: { title: "Table", icon: "table" },
+  //     },
+  //     {
+  //       path: "tree",
+  //       name: "Tree",
+  //       component: () => import("@/views/tree/index"),
+  //       meta: { title: "Tree", icon: "tree" },
+  //     },
+  //   ],
+  // },
 
   {
     path: "/nested",
