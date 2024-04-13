@@ -68,6 +68,12 @@ export const constantRoutes = [
         name: "CreateChart",
         component: () => import("@/views/createChart/index"),
       },
+      {
+        path: "chartGen/:fileKey",
+        name: "chartGen",
+        component: () => import("@/views/createChart/chartGen"),
+        hidden: true,
+      },
     ],
   },
   // {

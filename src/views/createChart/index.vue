@@ -1,6 +1,13 @@
 <template>
   <div class="createChart-container">
-    <el-table :data="tableData" style="width: 100%">
+    <el-alert :closable="false" title="Select data source" />
+    <el-table
+      :data="tableData"
+      style="width: 100%"
+      highlight-current-row
+      @row-click="storeKey"
+    >
+      <el-table-column type="index" width="50" />
       <el-table-column prop="Key" label="File Name">
         <template slot-scope="scope">
           <el-tag
@@ -19,6 +26,9 @@
       </el-table-column>
       <el-table-column prop="LastModified" label="Last Modified" />
     </el-table>
+
+    <el-button type="primary" @click="passKey">Next step</el-button>
+
     <!-- File content display -->
     <el-dialog title="File Content" :visible.sync="dialogVisible" width="30%">
       <el-table :data="fileContent" style="width: 100%">
@@ -48,40 +58,23 @@ export default {
       tableData: null,
       fileContent: null,
       fileList: [],
+      fileKey: null,
     };
   },
   mounted() {
     this.getBucketList();
   },
   methods: {
-    handleFileChange(e) {
-      let file = e.file;
-      console.log("file change", file);
-      if (file) {
-        var params = {
-          Bucket: "compx576-bucket",
-          Key: file.name,
-          Body: file,
-        };
-        if (this.checkBucket(params.Key)) {
-          this.$alert(
-            "Same file exists, are you sure you want to overwrite it?",
-            "Warning",
-            {
-              confirmButtonText: "Confirm",
-              callback: () => {
-                this.s3.upload(params, (err) => {
-                  if (err) {
-                    this.$message.warning(`${err.code},${err.data}`);
-                  } else {
-                    this.$message.success(`Upload success!`);
-                    this.getBucketList();
-                  }
-                });
-              },
-            }
-          );
-        }
+    storeKey(row) {
+      this.fileKey = row.Key;
+    },
+    passKey() {
+      if (this.fileKey != null) {
+        this.$router.push({
+          path: `/createChart/chartGen/${this.fileKey}`,
+        });
+      } else {
+        this.$message.warning("PLEASE SELECT A DATA SOURCE");
       }
     },
     async passFileName(key) {
@@ -89,25 +82,7 @@ export default {
       this.dialogVisible = true;
       this.fileContent = res.data;
     },
-    async checkBucket(file) {
-      await this.s3
-        .headObject({
-          Bucket: "compx576-bucket",
-          Key: file,
-        })
-        .promise()
-        .then(
-          () => {
-            return true;
-          },
-          (err) => {
-            if (err.code === "NotFound") {
-              return false;
-            }
-            throw err;
-          }
-        );
-    },
+
     formatBytes(bytes) {
       const kb = 1024;
       const mb = kb * 1024;
@@ -129,5 +104,8 @@ export default {
 <style lang="scss">
 .createChart-container {
   padding: 10px;
+}
+.el-table {
+  cursor: pointer;
 }
 </style>
