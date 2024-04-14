@@ -42,10 +42,12 @@
     <!-- File content display -->
     <el-dialog title="File Content" :visible.sync="dialogVisible" width="30%">
       <el-table :data="fileContent" style="width: 100%">
-        <el-table-column prop="Fruit Name" label="Content 1" width="180">
-        </el-table-column>
-        <el-table-column prop="Price" label="Content 2" width="180">
-        </el-table-column>
+        <el-table-column
+          v-for="(item, index) in columnLabel"
+          :key="index"
+          :label="item"
+          :prop="item"
+        ></el-table-column>
       </el-table>
     </el-dialog>
   </div>
@@ -67,6 +69,7 @@ export default {
       }),
       tableData: null,
       fileContent: null,
+      columnLabel: null,
       fileList: [],
     };
   },
@@ -125,6 +128,7 @@ export default {
       let res = await getFileContent({ key: key });
       this.dialogVisible = true;
       this.fileContent = res.data;
+      this.columnLabel = Object.keys(this.fileContent[0]);
     },
     //check if file exists in bucket by key
     async checkBucket(fileKey) {
