@@ -156,15 +156,31 @@ export default {
       let res = await getDataSource();
       this.tableData = res.data;
     },
+    //delete file by file key
     async deleteFile(fileKey) {
       let params = { Bucket: "compx576-bucket", Key: fileKey };
-      try {
-        await this.s3.deleteObject(params).promise();
-        this.$message.success(`Delete success!`);
-        this.getBucketList();
-      } catch (err) {
-        this.$message.warning(err.code);
-      }
+      this.$confirm(
+        "This will permanently delete the data source, are you sure?",
+        "Warning",
+        {
+          confirmButtonText: "Confirm",
+          cancelButtonText: "Cancel",
+          type: "warning",
+        }
+      )
+        .then(() => {
+          this.s3.deleteObject(params, (err) => {
+            if (err) {
+              this.$message.warning(`${err.code},${err.data}`);
+            } else {
+              this.$message.success(`Delete success!`);
+              this.getBucketList();
+            }
+          });
+        })
+        .catch(() => {
+          this.$message.warning(`Cancelled`);
+        });
     },
   },
 };
