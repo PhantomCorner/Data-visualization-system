@@ -32,10 +32,12 @@
     <!-- File content display -->
     <el-dialog title="File Content" :visible.sync="dialogVisible" width="30%">
       <el-table :data="fileContent" style="width: 100%">
-        <el-table-column prop="Fruit Name" label="Content 1" width="180">
-        </el-table-column>
-        <el-table-column prop="Price" label="Content 2" width="180">
-        </el-table-column>
+        <el-table-column
+          v-for="(item, index) in columnLabel"
+          :key="index"
+          :label="item"
+          :prop="item"
+        ></el-table-column>
       </el-table>
     </el-dialog>
   </div>
@@ -43,7 +45,7 @@
 <script>
 import { ak, ask } from "../../../ak.js";
 import AWS from "aws-sdk";
-import { getDataSource, getFileContent } from "@/api/user";
+import { getDataSource, getFileContent } from "@/api/dataSource";
 export default {
   name: "createChart",
   data() {
@@ -57,6 +59,7 @@ export default {
       }),
       tableData: null,
       fileContent: null,
+      columnLabel: null,
       fileList: [],
       fileKey: null,
     };
@@ -81,6 +84,8 @@ export default {
       let res = await getFileContent({ key: key });
       this.dialogVisible = true;
       this.fileContent = res.data;
+      //store column label to render table
+      this.columnLabel = Object.keys(this.fileContent[0]);
     },
 
     formatBytes(bytes) {

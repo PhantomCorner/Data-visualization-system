@@ -55,7 +55,7 @@
 <script>
 import { ak, ask } from "../../../ak.js";
 import AWS from "aws-sdk";
-import { getDataSource, getFileContent } from "@/api/user";
+import { getDataSource, getFileContent } from "@/api/dataSource";
 export default {
   name: "DataSource",
   data() {
@@ -128,6 +128,7 @@ export default {
       let res = await getFileContent({ key: key });
       this.dialogVisible = true;
       this.fileContent = res.data;
+      //store column label to render table
       this.columnLabel = Object.keys(this.fileContent[0]);
     },
     //check if file exists in bucket by key
