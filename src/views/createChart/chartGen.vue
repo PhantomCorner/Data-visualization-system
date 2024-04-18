@@ -2,9 +2,24 @@
   <div class="chartGen-container">
     <el-alert :closable="false" title="Chart Preview" />
     <div class="container">
-      <div id="chart-container"></div>
-      <div class="chart-selection" v-if="isListLoaded">
-        <el-tabs type="card" class="demo-tabs" v-model="activeTab">
+      <div id="chart-container">
+        <hamburger
+          :is-active="sideBarStatus"
+          class="hamburger-container"
+          @toggleClick="toggleSideBar"
+        />
+      </div>
+      <el-drawer
+        title="Select chart"
+        :visible.sync="sideBarStatus"
+        direction="rtl"
+      >
+        <el-tabs
+          type="card"
+          class="demo-tabs"
+          v-model="activeTab"
+          v-if="isListLoaded"
+        >
           <el-tab-pane
             v-for="(category, index) in Object.keys(chartPreviewLinks)"
             :label="category"
@@ -14,19 +29,24 @@
               class="preview-image"
               v-for="item in chartPreviewLinks[category]"
             >
-              <el-image :src="item.link" fit="fill" />
+              <el-image style="width: 180px; height: 180px" :src="item.link" />
               <span class="demonstration">{{ item.content }}</span>
             </div>
           </el-tab-pane>
         </el-tabs>
-      </div>
+      </el-drawer>
     </div>
   </div>
 </template>
 <script>
 import { getFileContent, getAllChartPreview } from "@/api/dataSource";
+import Hamburger from "@/components/Hamburger";
+
 export default {
   name: "chartGen",
+  components: {
+    Hamburger,
+  },
   data() {
     return {
       activeTab: "lineCharts",
@@ -34,7 +54,11 @@ export default {
       fileContent: null,
       chartPreviewLinks: null,
       isListLoaded: false,
+      sideBarStatus: false,
     };
+  },
+  computed: {
+    chart_selection() {},
   },
   mounted() {
     this.fileKey = this.$route.params.fileKey;
@@ -45,9 +69,12 @@ export default {
       let res = await getFileContent({ key: this.fileKey });
       let allChartPreview = await getAllChartPreview();
       this.chartPreviewLinks = allChartPreview.data;
-      console.log(this.chartPreviewLinks.lineCharts);
       this.fileContent = res.data;
       this.isListLoaded = true;
+    },
+    toggleSideBar() {
+      this.sideBarStatus = true;
+      // this.chart_selection;
     },
   },
 };
@@ -63,19 +90,34 @@ export default {
 }
 
 #chart-container {
-  background-color: green;
+  background-color: #e8e8ff;
   height: 100vh;
   flex: 2;
 }
 
-.chart-selection {
-  height: 100vh;
-  flex: 0.5;
-}
 .preview-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
   text-align: center;
   border-radius: 25px;
   border: 2px #336699 solid;
   cursor: pointer;
+}
+.demonstration {
+  font-weight: bold;
+}
+.hamburger-container {
+  line-height: 46px;
+  height: 100%;
+  float: right;
+  cursor: pointer;
+  transition: background 0.3s;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.025);
+  }
 }
 </style>
