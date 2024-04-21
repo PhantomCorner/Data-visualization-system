@@ -1,13 +1,12 @@
 <template>
   <div class="chartGen-container">
     <el-alert :closable="false" title="Chart Preview" />
-    <div id="chart-container">
-      <hamburger
-        :is-active="sideBarStatus"
-        class="hamburger-container"
-        @toggleClick="toggleSideBar"
-      />
-    </div>
+    <div id="chart-container"></div>
+    <hamburger
+      :is-active="sideBarStatus"
+      class="hamburger-container"
+      @toggleClick="toggleSideBar"
+    />
     <el-drawer
       custom-class="drawer"
       size="40%"
@@ -22,7 +21,7 @@
           :name="category"
         >
           <div
-            @click="passChartType(item.content)"
+            @click="setChartOption(item.content)"
             class="preview-image"
             v-for="item in chartPreviewLinks[category]"
           >
@@ -53,6 +52,7 @@ export default {
       chartPreviewLinks: null,
       isListLoaded: false,
       sideBarStatus: false,
+      data: null,
     };
   },
   computed: {},
@@ -68,13 +68,55 @@ export default {
       this.fileContent = res.data;
       this.isListLoaded = true;
       //init echart container
-      let chart = echarts.init(document.getElementById("chart-container"));
+      this.chart = echarts.init(document.getElementById("chart-container"));
     },
     toggleSideBar() {
       this.sideBarStatus = true;
     },
     passChartType(type) {
       console.log(type);
+    },
+    handleDataSource() {
+      return this.fileContent.map((item) => {
+        const keys = Object.keys(item);
+        return {
+          name: item[keys[0]],
+          value: item[keys[1]],
+        };
+      });
+    },
+    setChartOption(content) {
+      console.log(content.replace(/ /g, "_"));
+      this.chart.setOption({
+        title: {
+          text: "Traffic Sources",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "item",
+          formatter: "{a} <br/>{b} : {c} ({d}%)",
+        },
+        legend: {
+          orient: "vertical",
+          left: "left",
+        },
+        series: [
+          {
+            name: "Traffic Sources",
+            type: "pie",
+            radius: "55%",
+            center: ["50%", "60%"],
+            data: this.handleDataSource(),
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: "rgba(0, 0, 0, 0.5)",
+              },
+            },
+          },
+        ],
+      });
     },
   },
 };
