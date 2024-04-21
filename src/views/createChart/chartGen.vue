@@ -1,41 +1,37 @@
 <template>
   <div class="chartGen-container">
     <el-alert :closable="false" title="Chart Preview" />
-    <div class="container">
-      <div id="chart-container">
-        <hamburger
-          :is-active="sideBarStatus"
-          class="hamburger-container"
-          @toggleClick="toggleSideBar"
-        />
-      </div>
-      <el-drawer
-        title="Select chart"
-        :visible.sync="sideBarStatus"
-        direction="rtl"
-      >
-        <el-tabs
-          type="card"
-          class="demo-tabs"
-          v-model="activeTab"
-          v-if="isListLoaded"
-        >
-          <el-tab-pane
-            v-for="(category, index) in Object.keys(chartPreviewLinks)"
-            :label="category"
-            :name="category"
-          >
-            <div
-              class="preview-image"
-              v-for="item in chartPreviewLinks[category]"
-            >
-              <el-image style="width: 180px; height: 180px" :src="item.link" />
-              <span class="demonstration">{{ item.content }}</span>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
-      </el-drawer>
+    <div id="chart-container">
+      <hamburger
+        :is-active="sideBarStatus"
+        class="hamburger-container"
+        @toggleClick="toggleSideBar"
+      />
     </div>
+    <el-drawer
+      custom-class="drawer"
+      size="40%"
+      title="Select chart"
+      :visible.sync="sideBarStatus"
+      direction="rtl"
+    >
+      <el-tabs class="chart-tabs" v-model="activeTab" v-if="isListLoaded">
+        <el-tab-pane
+          v-for="(category, index) in Object.keys(chartPreviewLinks)"
+          :label="category"
+          :name="category"
+        >
+          <div
+            @click="passChartType(item.content)"
+            class="preview-image"
+            v-for="item in chartPreviewLinks[category]"
+          >
+            <el-image :src="item.link" />
+            <p class="demonstration">{{ item.content }}</p>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-drawer>
   </div>
 </template>
 <script>
@@ -57,9 +53,7 @@ export default {
       sideBarStatus: false,
     };
   },
-  computed: {
-    chart_selection() {},
-  },
+  computed: {},
   mounted() {
     this.fileKey = this.$route.params.fileKey;
     this.init();
@@ -74,7 +68,9 @@ export default {
     },
     toggleSideBar() {
       this.sideBarStatus = true;
-      // this.chart_selection;
+    },
+    passChartType(type) {
+      console.log(type);
     },
   },
 };
@@ -83,31 +79,34 @@ export default {
 .chartGen-container {
   padding: 10px;
 }
-.container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 #chart-container {
   background-color: #e8e8ff;
-  height: 100vh;
   flex: 2;
+  height: 80vh;
+}
+.drawer {
+  background-color: #f3f4f9;
+  .chart-tabs {
+    padding: 5px;
+    .preview-image {
+      padding: 2px;
+      width: 210px;
+      height: 210px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .demonstration {
+      font-weight: bold;
+    }
+    .el-tab-pane {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+  }
 }
 
-.preview-image {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px;
-  text-align: center;
-  border-radius: 25px;
-  border: 2px #336699 solid;
-  cursor: pointer;
-}
-.demonstration {
-  font-weight: bold;
-}
 .hamburger-container {
   line-height: 46px;
   height: 100%;
@@ -115,7 +114,6 @@ export default {
   cursor: pointer;
   transition: background 0.3s;
   -webkit-tap-highlight-color: transparent;
-
   &:hover {
     background: rgba(0, 0, 0, 0.025);
   }
