@@ -37,6 +37,7 @@
 <script>
 import { getFileContent, getAllChartPreview } from "@/api/dataSource";
 import Hamburger from "@/components/Hamburger";
+import * as echarts from "echarts";
 
 export default {
   name: "chartGen",
@@ -45,6 +46,7 @@ export default {
   },
   data() {
     return {
+      chart: null,
       activeTab: "lineCharts",
       fileKey: null,
       fileContent: null,
@@ -65,6 +67,8 @@ export default {
       this.chartPreviewLinks = allChartPreview.data;
       this.fileContent = res.data;
       this.isListLoaded = true;
+      //init echart container
+      let chart = echarts.init(document.getElementById("chart-container"));
     },
     toggleSideBar() {
       this.sideBarStatus = true;

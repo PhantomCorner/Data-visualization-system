@@ -20,3 +20,10 @@ export function getAllChartPreview() {
     method: "get",
   });
 }
+export function getChartOption(data) {
+  return request({
+    url: "/dataSource/chartOption",
+    method: "post",
+    data,
+  });
+}
