@@ -13,17 +13,3 @@ export function getFileContent(data) {
     data,
   });
 }
-
-export function getAllChartPreview() {
-  return request({
-    url: "/dataSource/chartPreview/all",
-    method: "get",
-  });
-}
-export function getChartOption(data) {
-  return request({
-    url: "/dataSource/chartOption",
-    method: "post",
-    data,
-  });
-}

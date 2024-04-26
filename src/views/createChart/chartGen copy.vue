@@ -1,51 +1,46 @@
 <template>
   <div class="chartGen-container">
-    <!-- <el-alert :closable="false" :title="`${this.fileKey}: Chart preview`" /> -->
-    <el-container>
-      <el-aside width="200px">
-        <div class="file">
-          <p style="font-weight: bold">Data source</p>
-          <svg
-            class="w-6 h-6 text-gray-800 dark:text-white"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-7Z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          {{ this.fileKey }}
-        </div>
-        <div class="fields"></div>
-      </el-aside>
-      <el-main>
-        <div id="chart-container"></div>
-      </el-main>
-      <el-aside width="300px">
-        <el-tabs class="chart-tabs" v-model="activeTab" v-if="isListLoaded">
-          <el-tab-pane
-            v-for="(category, index) in Object.keys(chartPreviewLinks)"
-            :label="category"
-            :name="category"
-          >
-            <div
-              @click="setChartOption(item.content)"
-              class="preview-image"
-              v-for="item in chartPreviewLinks[category]"
-            >
-              <el-image :src="item.link" />
-              <p class="demonstration">{{ item.content }}</p>
-            </div>
-          </el-tab-pane></el-tabs
+    <el-alert :closable="false" :title="`${this.fileKey}: Chart preview`" />
+    <div id="chart-container"></div>
+    <hamburger
+      :is-active="sideBarStatus"
+      class="hamburger-container"
+      @toggleClick="toggleSideBar"
+    />
+    <el-drawer
+      :append-to-body="true"
+      :modal-append-to-body="false"
+      custom-class="drawer"
+      size="40%"
+      title="Select chart"
+      :visible.sync="sideBarStatus"
+      direction="rtl"
+    >
+      <el-tabs class="chart-tabs" v-model="activeTab" v-if="isListLoaded">
+        <el-tab-pane
+          v-for="(category, index) in Object.keys(chartPreviewLinks)"
+          :label="category"
+          :name="category"
         >
-      </el-aside>
-    </el-container>
+          <div
+            @click="setChartOption(item.content)"
+            class="preview-image"
+            v-for="item in chartPreviewLinks[category]"
+          >
+            <el-image :src="item.link" />
+            <p class="demonstration">{{ item.content }}</p>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-drawer>
+    <el-drawer
+      custom-class="drawer"
+      size="40%"
+      title="Chart customization"
+      :visible.sync="customizeChart"
+      direction="rtl"
+    >
+    </el-drawer>
   </div>
 </template>
 <script>
@@ -81,7 +76,6 @@ export default {
   methods: {
     async init() {
       let res = await getFileContent({ key: this.fileKey });
-      console.log(res);
       let allChartPreview = await getAllChartPreview();
       this.chartPreviewLinks = allChartPreview.data;
       this.fileContent = res.data;
@@ -104,29 +98,23 @@ export default {
         };
       });
     },
-    async setChartOption(content) {},
+    async setChartOption(content) {
+      let option = await getChartOption({ chart: content.replace(/ /g, "_") });
+      this.customizeChart = true;
+    },
   },
 };
 </script>
 <style lang="scss">
 .chartGen-container {
-  background-color: #f6f8fa;
-  height: calc(100vh - 90px);
   padding: 10px;
-
-  .el-main {
-    background-color: #e9eef3;
-    color: #333;
-    text-align: center;
-    padding: 0;
-    #chart-container {
-      background-color: #e8e8ff;
-      flex: 2;
-      height: calc(100vh - 90px);
-    }
-  }
 }
 
+#chart-container {
+  background-color: #e8e8ff;
+  flex: 2;
+  height: 80vh;
+}
 .drawer {
   background-color: #f3f4f9;
   .chart-tabs {
