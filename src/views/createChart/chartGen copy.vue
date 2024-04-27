@@ -1,51 +1,98 @@
 <template>
   <div class="chartGen-container">
-    <el-alert :closable="false" :title="`${this.fileKey}: Chart preview`" />
-    <div id="chart-container"></div>
-    <hamburger
-      :is-active="sideBarStatus"
-      class="hamburger-container"
-      @toggleClick="toggleSideBar"
-    />
-    <el-drawer
-      :append-to-body="true"
-      :modal-append-to-body="false"
-      custom-class="drawer"
-      size="40%"
-      title="Select chart"
-      :visible.sync="sideBarStatus"
-      direction="rtl"
-    >
-      <el-tabs class="chart-tabs" v-model="activeTab" v-if="isListLoaded">
-        <el-tab-pane
-          v-for="(category, index) in Object.keys(chartPreviewLinks)"
-          :label="category"
-          :name="category"
-        >
-          <div
-            @click="setChartOption(item.content)"
-            class="preview-image"
-            v-for="item in chartPreviewLinks[category]"
+    <el-container>
+      <el-aside width="300px">
+        <div class="file">
+          <p style="font-weight: bold">Data source</p>
+          <svg
+            class="w-6 h-6 text-gray-800 dark:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="currentColor"
+            viewBox="0 0 24 24"
           >
-            <el-image :src="item.link" />
-            <p class="demonstration">{{ item.content }}</p>
+            <path
+              fill-rule="evenodd"
+              d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-7Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          {{ this.fileKey }}
+        </div>
+        <div class="fields">
+          <div class="col-3">
+            <h3>Draggable 1</h3>
+            <draggable
+              class="list-group"
+              :list="list1"
+              group="people"
+              @change="log"
+            >
+              <div
+                class="list-group-item"
+                v-for="(element, index) in list1"
+                :key="element.name"
+              >
+                {{ element.name }} {{ index }}
+              </div>
+            </draggable>
           </div>
-        </el-tab-pane>
-      </el-tabs>
-    </el-drawer>
-    <el-drawer
-      custom-class="drawer"
-      size="40%"
-      title="Chart customization"
-      :visible.sync="customizeChart"
-      direction="rtl"
-    >
-    </el-drawer>
+
+          <div class="col-3">
+            <h3>Draggable 2</h3>
+            <draggable
+              class="list-group"
+              :list="list2"
+              group="people"
+              @change="log"
+            >
+              <div
+                class="list-group-item"
+                v-for="(element, index) in list2"
+                :key="element.name"
+              >
+                {{ element.name }} {{ index }}
+              </div>
+            </draggable>
+          </div>
+        </div>
+      </el-aside>
+      <el-main>
+        <div id="chart-container"></div>
+      </el-main>
+      <el-aside width="300px">
+        <el-tabs
+          class="chart-tabs"
+          v-model="activeTab"
+          v-if="isListLoaded"
+          @tab-click="selectedDiv = null"
+        >
+          <el-tab-pane
+            v-for="category in Object.keys(chartPreviewLinks)"
+            :label="category"
+            :name="category"
+          >
+            <div
+              v-for="(item, index) in chartPreviewLinks[category]"
+              @click="setChartOption(item.content, index)"
+              class="preview-image"
+              :class="{ 'selected-preview-image': selectedDiv == index }"
+            >
+              <el-image :src="item.link" />
+              <!-- <p class="demonstration">{{ item.content }}</p> -->
+            </div>
+          </el-tab-pane></el-tabs
+        >
+      </el-aside>
+    </el-container>
   </div>
 </template>
 <script>
 import { getFileContent } from "@/api/dataSource";
 import { getAllChartPreview, getChartOption } from "@/api/chartGen.js";
+import draggable from "vuedraggable";
 
 import Hamburger from "@/components/Hamburger";
 import * as echarts from "echarts";
@@ -54,10 +101,12 @@ export default {
   name: "chartGen",
   components: {
     Hamburger,
+    draggable,
   },
   data() {
     return {
       chart: null,
+      chartOption: null,
       activeTab: "lineCharts",
       fileKey: null,
       fileContent: null,
@@ -66,6 +115,18 @@ export default {
       sideBarStatus: false,
       customizeChart: false,
       data: null,
+      selectedDiv: 0,
+      list1: [
+        { name: "John", id: 1 },
+        { name: "Joao", id: 2 },
+        { name: "Jean", id: 3 },
+        { name: "Gerard", id: 4 },
+      ],
+      list2: [
+        { name: "Juan", id: 5 },
+        { name: "Edgard", id: 6 },
+        { name: "Johnson", id: 7 },
+      ],
     };
   },
   computed: {},
@@ -76,6 +137,7 @@ export default {
   methods: {
     async init() {
       let res = await getFileContent({ key: this.fileKey });
+      // console.log(res);
       let allChartPreview = await getAllChartPreview();
       this.chartPreviewLinks = allChartPreview.data;
       this.fileContent = res.data;
@@ -90,52 +152,124 @@ export default {
       console.log(type);
     },
     handleDataSource() {
-      return this.fileContent.map((item) => {
-        const keys = Object.keys(item);
-        return {
-          name: item[keys[0]],
-          value: item[keys[1]],
-        };
+      // return this.fileContent.map((item) => {
+      //   const keys = Object.keys(item);
+      //   return {
+      //     name: item[keys[0]],
+      //     value: item[keys[1]],
+      //   };
+      // });
+      let groupedData = [];
+
+      function findKeyData(key) {
+        return groupedData.find((element) => element.key === key);
+      }
+
+      this.fileContent.forEach((item) => {
+        Object.keys(item).forEach((key) => {
+          let keyData = findKeyData(key);
+          if (!keyData) {
+            keyData = { key: key, values: [] };
+            groupedData.push(keyData);
+          }
+          keyData.values.push(item[key]);
+        });
       });
+      return groupedData;
     },
-    async setChartOption(content) {
+    async setChartOption(content, index) {
+      this.chartOption = null;
+      let groupedData = this.handleDataSource();
+      this.selectedDiv = index;
       let option = await getChartOption({ chart: content.replace(/ /g, "_") });
-      this.customizeChart = true;
+      option = option.data;
+      option.xAxis.data = groupedData[0].values;
+      option.series[0].data = groupedData[1].values;
+      this.chartOption = option;
+      this.chart.setOption(this.chartOption, true);
+    },
+
+    add: function () {
+      this.list.push({ name: "Juan" });
+    },
+    replace: function () {
+      this.list = [{ name: "Edgard" }];
+    },
+    clone: function (el) {
+      return {
+        name: el.name + " cloned",
+      };
+    },
+    log: function (evt) {
+      window.console.log(evt);
     },
   },
 };
 </script>
 <style lang="scss">
 .chartGen-container {
-  padding: 10px;
-}
-
-#chart-container {
-  background-color: #e8e8ff;
-  flex: 2;
-  height: 80vh;
-}
-.drawer {
-  background-color: #f3f4f9;
-  .chart-tabs {
-    padding: 5px;
-    .preview-image {
-      padding: 2px;
-      width: 180px;
-      height: 210px;
-      text-align: center;
-      cursor: pointer;
-      border-radius: 2px;
+  background-color: #f6f8fa;
+  height: calc(100vh - 90px);
+  .el-main {
+    background-color: #e9eef3;
+    color: #333;
+    text-align: center;
+    padding: 0;
+    #chart-container {
+      background-color: #ffffff;
+      flex: 2;
+      height: calc(100vh - 90px);
     }
-    .demonstration {
-      font-weight: bold;
+  }
+  .el-aside {
+    .chart-tabs {
+      padding: 5px;
+      .preview-image {
+        // padding: 2px;
+        width: 180px;
+        // height: 210px;
+        text-align: center;
+        cursor: pointer;
+      }
+      .selected-preview-image {
+        // padding: 2px;
+        width: 180px;
+        // height: 210px;
+        text-align: center;
+        cursor: pointer;
+        background: skyblue;
+      }
+      .demonstration {
+        font-weight: bold;
+      }
+      .el-tab-pane {
+        display: flex;
+        flex-wrap: wrap;
+      }
     }
-    .el-tab-pane {
-      display: flex;
-      flex-wrap: wrap;
+    .file {
+      border-bottom: 1px solid;
     }
-    .highlight {
-      border-color: blue; /* 高亮颜色 */
+    .fields {
+      .list-group {
+        display: -ms-flexbox;
+        display: -webkit-box;
+        display: flex;
+        -ms-flex-direction: column;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        flex-direction: column;
+        padding-left: 0;
+        margin-bottom: 0;
+        .list-group-item {
+          position: relative;
+          display: block;
+          padding: 0.75rem 1.25rem;
+          margin-bottom: -1px;
+          background-color: #fff;
+          border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+      }
     }
   }
 }

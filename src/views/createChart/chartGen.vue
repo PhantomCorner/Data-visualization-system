@@ -1,8 +1,7 @@
 <template>
   <div class="chartGen-container">
-    <!-- <el-alert :closable="false" :title="`${this.fileKey}: Chart preview`" /> -->
     <el-container>
-      <el-aside width="200px">
+      <el-aside width="300px">
         <div class="file">
           <p style="font-weight: bold">Data source</p>
           <svg
@@ -22,25 +21,67 @@
           </svg>
           {{ this.fileKey }}
         </div>
-        <div class="fields"></div>
+        <div class="fields">
+          <div class="col-3">
+            <h3>Fields</h3>
+            <draggable
+              class="list-group"
+              :list="fieldsList"
+              group="people"
+              @change="log"
+            >
+              <div
+                class="list-group-item"
+                v-for="(element, index) in fieldsList"
+                :key="element.fieldName"
+              >
+                {{ element.fieldName }}
+              </div>
+            </draggable>
+          </div>
+
+          <div class="col-3">
+            <h3>Data</h3>
+            <draggable
+              class="list-group"
+              :list="dataList"
+              group="people"
+              @change="log"
+            >
+              <div
+                class="list-group-item"
+                v-for="(element, index) in dataList"
+                :key="element.fieldName"
+              >
+                {{ element.fieldName }}
+              </div>
+            </draggable>
+          </div>
+        </div>
       </el-aside>
       <el-main>
         <div id="chart-container"></div>
       </el-main>
       <el-aside width="300px">
-        <el-tabs class="chart-tabs" v-model="activeTab" v-if="isListLoaded">
+        <el-tabs
+          class="chart-tabs"
+          v-model="activeTab"
+          v-if="isListLoaded"
+          @tab-click="selectedDiv = null"
+        >
           <el-tab-pane
-            v-for="(category, index) in Object.keys(chartPreviewLinks)"
+            v-for="category in Object.keys(chartPreviewLinks)"
             :label="category"
             :name="category"
           >
             <div
-              @click="setChartOption(item.content)"
+              v-for="(item, index) in chartPreviewLinks[category]"
+              @click="setChartOption(item.content, index)"
               class="preview-image"
-              v-for="item in chartPreviewLinks[category]"
+              :class="{ 'selected-preview-image': selectedDiv == index }"
             >
               <el-image :src="item.link" />
-              <p class="demonstration">{{ item.content }}</p>
+              <!-- <p class="demonstration">{{ item.content }}</p> -->
             </div>
           </el-tab-pane></el-tabs
         >
@@ -51,6 +92,7 @@
 <script>
 import { getFileContent } from "@/api/dataSource";
 import { getAllChartPreview, getChartOption } from "@/api/chartGen.js";
+import draggable from "vuedraggable";
 
 import Hamburger from "@/components/Hamburger";
 import * as echarts from "echarts";
@@ -59,10 +101,12 @@ export default {
   name: "chartGen",
   components: {
     Hamburger,
+    draggable,
   },
   data() {
     return {
       chart: null,
+      chartOption: null,
       activeTab: "lineCharts",
       fileKey: null,
       fileContent: null,
@@ -71,6 +115,9 @@ export default {
       sideBarStatus: false,
       customizeChart: false,
       data: null,
+      selectedDiv: 0,
+      fieldsList: [],
+      dataList: [],
     };
   },
   computed: {},
@@ -81,13 +128,13 @@ export default {
   methods: {
     async init() {
       let res = await getFileContent({ key: this.fileKey });
-      console.log(res);
+      this.fileContent = res.data;
       let allChartPreview = await getAllChartPreview();
       this.chartPreviewLinks = allChartPreview.data;
-      this.fileContent = res.data;
       this.isListLoaded = true;
       //init echart container
       this.chart = echarts.init(document.getElementById("chart-container"));
+      this.handleDataSource();
     },
     toggleSideBar() {
       this.sideBarStatus = true;
@@ -96,15 +143,66 @@ export default {
       console.log(type);
     },
     handleDataSource() {
-      return this.fileContent.map((item) => {
-        const keys = Object.keys(item);
-        return {
-          name: item[keys[0]],
-          value: item[keys[1]],
-        };
+      // return this.fileContent.map((item) => {
+      //   const keys = Object.keys(item);
+      //   return {
+      //     name: item[keys[0]],
+      //     value: item[keys[1]],
+      //   };
+      // });
+      let stringFields = [];
+      let numberFields = [];
+
+      function findOrCreateField(fieldList, fieldName) {
+        let field = fieldList.find((item) => item.fieldName === fieldName);
+        if (!field) {
+          field = { fieldName: fieldName, values: [] };
+          fieldList.push(field);
+        }
+        return field;
+      }
+      this.fileContent.forEach((item) => {
+        Object.entries(item).forEach(([key, value]) => {
+          if (typeof value === "string") {
+            let field = findOrCreateField(stringFields, key);
+            field.values.push(value);
+          } else if (typeof value === "number") {
+            let field = findOrCreateField(numberFields, key);
+            field.values.push(value);
+          }
+        });
       });
+      this.fieldsList = stringFields;
+      this.dataList = numberFields;
+      console.log(this.fieldsList);
+      console.log(this.dataList);
     },
-    async setChartOption(content) {},
+    async setChartOption(content, index) {
+      this.chartOption = null;
+      // let groupedData = this.handleDataSource();
+      this.selectedDiv = index;
+      let option = await getChartOption({ chart: content.replace(/ /g, "_") });
+      option = option.data;
+      option.xAxis.data = groupedData[0].values;
+      option.series[0].data = groupedData[1].values;
+      this.chartOption = option;
+      this.chart.setOption(this.chartOption, true);
+    },
+
+    add: function () {
+      this.list.push({ name: "Juan" });
+    },
+    replace: function () {
+      this.list = [{ name: "Edgard" }];
+    },
+    clone: function (el) {
+      return {
+        name: el.name + " cloned",
+      };
+    },
+    log: function (evt) {
+      window.console.log(evt);
+    },
   },
 };
 </script>
@@ -112,42 +210,66 @@ export default {
 .chartGen-container {
   background-color: #f6f8fa;
   height: calc(100vh - 90px);
-  padding: 10px;
-
   .el-main {
     background-color: #e9eef3;
     color: #333;
     text-align: center;
     padding: 0;
     #chart-container {
-      background-color: #e8e8ff;
+      background-color: #ffffff;
       flex: 2;
       height: calc(100vh - 90px);
     }
   }
-}
-
-.drawer {
-  background-color: #f3f4f9;
-  .chart-tabs {
-    padding: 5px;
-    .preview-image {
-      padding: 2px;
-      width: 180px;
-      height: 210px;
-      text-align: center;
-      cursor: pointer;
-      border-radius: 2px;
+  .el-aside {
+    .chart-tabs {
+      padding: 5px;
+      .preview-image {
+        // padding: 2px;
+        width: 180px;
+        // height: 210px;
+        text-align: center;
+        cursor: pointer;
+      }
+      .selected-preview-image {
+        // padding: 2px;
+        width: 180px;
+        // height: 210px;
+        text-align: center;
+        cursor: pointer;
+        background: skyblue;
+      }
+      .demonstration {
+        font-weight: bold;
+      }
+      .el-tab-pane {
+        display: flex;
+        flex-wrap: wrap;
+      }
     }
-    .demonstration {
-      font-weight: bold;
+    .file {
+      border-bottom: 1px solid;
     }
-    .el-tab-pane {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    .highlight {
-      border-color: blue; /* 高亮颜色 */
+    .fields {
+      .list-group {
+        display: -ms-flexbox;
+        display: -webkit-box;
+        display: flex;
+        -ms-flex-direction: column;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        flex-direction: column;
+        padding-left: 0;
+        margin-bottom: 0;
+        .list-group-item {
+          position: relative;
+          display: block;
+          padding: 0.75rem 1.25rem;
+          margin-bottom: -1px;
+          background-color: #fff;
+          border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+      }
     }
   }
 }
