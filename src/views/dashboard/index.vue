@@ -27,32 +27,7 @@ export default {
   },
   data() {
     return {
-      list: [
-        {
-          head: 0,
-          content: "Card 0",
-          chartOption: {
-            xAxis: {
-              type: "category",
-              data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            },
-            yAxis: {
-              type: "value",
-            },
-            series: [
-              {
-                data: [120, 200, 150, 80, 70, 110, 130],
-                type: "bar",
-              },
-            ],
-          },
-        },
-        { head: 1, content: "Card 1" },
-        { head: 2, content: "Card 2" },
-        { head: 3, content: "Card 3" },
-        { head: 4, content: "Card 4" },
-        { head: 5, content: "Card 5" },
-      ],
+      list: [],
     };
   },
   mounted() {
@@ -61,7 +36,14 @@ export default {
   methods: {
     async init() {
       let res = await getAllChart();
-      console.log(JSON.stringify(res.data[2].chartOption));
+      console.log(res);
+      res.data.forEach((item) => {
+        this.list.push({
+          id: item.chartId,
+          chartOption: JSON.parse(item.chartOption),
+          chartName: item.chartName,
+        });
+      });
     },
     createChart() {
       let last = this.list[this.list.length - 1];

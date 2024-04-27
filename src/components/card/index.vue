@@ -16,7 +16,7 @@
           <div class="dragCard_head" @mousedown="handleMousedown($event, item)">
             <slot name="head" :item="item">
               <div class="dragCard_head-defaut">
-                {{ item.content }}
+                {{ item.chartName }}
               </div>
             </slot>
           </div>
@@ -81,58 +81,18 @@ export default {
         this.$set(item, "dragCard_index", index);
         this.$set(item, "dragCard_id", "dragCard_id" + index);
       });
+      // this.initChart();
     },
     initChart() {
-      this.list.forEach((item, index) => {
-        let chart = echarts.init(document.getElementById(`cardChart${index}`));
-        if (item.chartOption) {
+      setTimeout(() => {
+        this.list.forEach((item, index) => {
+          console.log(item);
+          let chart = echarts.init(
+            document.getElementById(`cardChart${index}`)
+          );
           chart.setOption(item.chartOption);
-        } else {
-          chart.setOption({
-            title: {
-              text: "Traffic Sources",
-              left: "center",
-            },
-            tooltip: {
-              trigger: "item",
-              formatter: "{a} <br/>{b} : {c} ({d}%)",
-            },
-            legend: {
-              orient: "vertical",
-              left: "left",
-              data: [
-                "Direct",
-                "Email",
-                "Ad Networks",
-                "Video Ads",
-                "Search Engines",
-              ],
-            },
-            series: [
-              {
-                name: "Traffic Sources",
-                type: "pie",
-                radius: "55%",
-                center: ["50%", "60%"],
-                data: [
-                  { value: 335, name: "Direct" },
-                  { value: 310, name: "Email" },
-                  { value: 234, name: "Ad Networks" },
-                  { value: 135, name: "Video Ads" },
-                  { value: 1548, name: "Search Engines" },
-                ],
-                emphasis: {
-                  itemStyle: {
-                    shadowBlur: 10,
-                    shadowOffsetX: 0,
-                    shadowColor: "rgba(0, 0, 0, 0.5)",
-                  },
-                },
-              },
-            ],
-          });
-        }
-      });
+        });
+      }, 1000);
     },
     initItemStyle(INDEX) {
       return {

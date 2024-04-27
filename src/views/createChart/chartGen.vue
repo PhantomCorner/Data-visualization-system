@@ -241,11 +241,11 @@ export default {
     async uploadChart() {
       let res = passChartDetail({
         chartOption: this.chartOption,
+        // generate a randoom suffix
         chartName: `${this.chartName}_${(Math.random() + 1)
           .toString(36)
           .substring(4)}`,
       });
-      console.log(res);
     },
     log: function (evt) {
       window.console.log(evt);
