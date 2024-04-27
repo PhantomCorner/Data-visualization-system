@@ -13,3 +13,18 @@ export function getChartOption(data) {
     data,
   });
 }
+
+export function passChartDetail(data) {
+  return request({
+    url: "/chartGen/passChartDetail",
+    method: "post",
+    data,
+  });
+}
+
+export function getAllChart() {
+  return request({
+    url: "/chartGen/allCharts",
+    method: "get",
+  });
+}

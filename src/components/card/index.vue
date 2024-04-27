@@ -11,7 +11,6 @@
         class="dragCard_item"
         :style="initItemStyle(index)"
         :ref="item.dragCard_id"
-        :chart_option="item.chart_option"
       >
         <div class="dragCard_content">
           <div class="dragCard_head" @mousedown="handleMousedown($event, item)">
@@ -21,13 +20,7 @@
               </div>
             </slot>
           </div>
-          <div class="dragCard_body" :id="`cardChart${index}`">
-            <!-- <slot name="content" :item="item">
-              <div class="dragCard_body-defaut">
-                {{ item.content ? item.content : `No data` }}
-              </div>
-            </slot> -->
-          </div>
+          <div class="dragCard_body" :id="`cardChart${index}`"></div>
         </div>
       </div>
     </div>
@@ -76,7 +69,6 @@ export default {
     },
   },
   mounted() {
-    // this.card_chart = echarts.init(document.getElementById("cardChart"));
     this.initChart();
   },
   methods: {
@@ -93,49 +85,53 @@ export default {
     initChart() {
       this.list.forEach((item, index) => {
         let chart = echarts.init(document.getElementById(`cardChart${index}`));
-        chart.setOption({
-          title: {
-            text: "Traffic Sources",
-            left: "center",
-          },
-          tooltip: {
-            trigger: "item",
-            formatter: "{a} <br/>{b} : {c} ({d}%)",
-          },
-          legend: {
-            orient: "vertical",
-            left: "left",
-            data: [
-              "Direct",
-              "Email",
-              "Ad Networks",
-              "Video Ads",
-              "Search Engines",
-            ],
-          },
-          series: [
-            {
-              name: "Traffic Sources",
-              type: "pie",
-              radius: "55%",
-              center: ["50%", "60%"],
+        if (item.chartOption) {
+          chart.setOption(item.chartOption);
+        } else {
+          chart.setOption({
+            title: {
+              text: "Traffic Sources",
+              left: "center",
+            },
+            tooltip: {
+              trigger: "item",
+              formatter: "{a} <br/>{b} : {c} ({d}%)",
+            },
+            legend: {
+              orient: "vertical",
+              left: "left",
               data: [
-                { value: 335, name: "Direct" },
-                { value: 310, name: "Email" },
-                { value: 234, name: "Ad Networks" },
-                { value: 135, name: "Video Ads" },
-                { value: 1548, name: "Search Engines" },
+                "Direct",
+                "Email",
+                "Ad Networks",
+                "Video Ads",
+                "Search Engines",
               ],
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowOffsetX: 0,
-                  shadowColor: "rgba(0, 0, 0, 0.5)",
+            },
+            series: [
+              {
+                name: "Traffic Sources",
+                type: "pie",
+                radius: "55%",
+                center: ["50%", "60%"],
+                data: [
+                  { value: 335, name: "Direct" },
+                  { value: 310, name: "Email" },
+                  { value: 234, name: "Ad Networks" },
+                  { value: 135, name: "Video Ads" },
+                  { value: 1548, name: "Search Engines" },
+                ],
+                emphasis: {
+                  itemStyle: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: "rgba(0, 0, 0, 0.5)",
+                  },
                 },
               },
-            },
-          ],
-        });
+            ],
+          });
+        }
       });
     },
     initItemStyle(INDEX) {

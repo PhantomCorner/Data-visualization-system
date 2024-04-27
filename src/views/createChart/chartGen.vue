@@ -21,48 +21,97 @@
           </svg>
           {{ this.fileKey }}
         </div>
-        <div class="fields">
-          <div class="col-3">
-            <h3>Fields</h3>
-            <draggable
-              class="list-group"
-              :list="fieldsList"
-              group="people"
-              @change="log"
-            >
-              <div
-                class="list-group-item"
-                v-for="(element, index) in fieldsList"
-                :key="element.fieldName"
+        <div class="fileContent">
+          <!-- Datasource conetnt -->
+          <div class="fields">
+            <div class="col-3">
+              <h3>Fields</h3>
+              <draggable
+                class="list-group"
+                :list="fieldsList"
+                group="people"
+                @change="log"
               >
-                {{ element.fieldName }}
-              </div>
-            </draggable>
+                <div
+                  class="list-group-item"
+                  v-for="(element, index) in fieldsList"
+                  :key="element.fieldName"
+                >
+                  {{ element.fieldName }}
+                </div>
+              </draggable>
+            </div>
+            <div class="col-3">
+              <h3>Data</h3>
+              <draggable
+                class="list-group"
+                :list="dataList"
+                group="people"
+                @change="log"
+              >
+                <div
+                  class="list-group-item"
+                  v-for="(element, index) in dataList"
+                  :key="element.fieldName"
+                >
+                  {{ element.fieldName }}
+                </div>
+              </draggable>
+            </div>
           </div>
-
-          <div class="col-3">
-            <h3>Data</h3>
-            <draggable
-              class="list-group"
-              :list="dataList"
-              group="people"
-              @change="log"
-            >
-              <div
-                class="list-group-item"
-                v-for="(element, index) in dataList"
-                :key="element.fieldName"
+          <!-- Chart option -->
+          <div class="fields">
+            <div class="col-3">
+              <h3>Chart Fields</h3>
+              <draggable
+                class="list-group"
+                :list="chartSeries"
+                group="people"
+                @change="log"
               >
-                {{ element.fieldName }}
-              </div>
-            </draggable>
+                <div
+                  class="list-group-item"
+                  v-for="(element, index) in chartSeries"
+                  :key="element.fieldName"
+                >
+                  {{ element.fieldName }}
+                </div>
+              </draggable>
+            </div>
+            <div class="col-3">
+              <h3>Chart Data</h3>
+              <draggable
+                class="list-group"
+                :list="chartData"
+                group="people"
+                @change="log"
+              >
+                <div
+                  class="list-group-item"
+                  v-for="(element, index) in chartData"
+                  :key="element.fieldName"
+                >
+                  {{ element.fieldName }}
+                </div>
+              </draggable>
+            </div>
           </div>
         </div>
       </el-aside>
       <el-main>
+        <div class="description">
+          <el-input v-model="chartName" placeholder="Chart"></el-input>
+          <el-link
+            type="success"
+            @click="uploadChart"
+            v-if="chartOption != null"
+            >Submit</el-link
+          >
+        </div>
+
         <div id="chart-container"></div>
       </el-main>
-      <el-aside width="300px">
+      <el-aside width="200px">
         <el-tabs
           class="chart-tabs"
           v-model="activeTab"
@@ -81,17 +130,19 @@
               :class="{ 'selected-preview-image': selectedDiv == index }"
             >
               <el-image :src="item.link" />
-              <!-- <p class="demonstration">{{ item.content }}</p> -->
-            </div>
-          </el-tab-pane></el-tabs
-        >
+            </div> </el-tab-pane
+        ></el-tabs>
       </el-aside>
     </el-container>
   </div>
 </template>
 <script>
 import { getFileContent } from "@/api/dataSource";
-import { getAllChartPreview, getChartOption } from "@/api/chartGen.js";
+import {
+  getAllChartPreview,
+  getChartOption,
+  passChartDetail,
+} from "@/api/chartGen.js";
 import draggable from "vuedraggable";
 
 import Hamburger from "@/components/Hamburger";
@@ -106,6 +157,7 @@ export default {
   data() {
     return {
       chart: null,
+      chartName: "New chart",
       chartOption: null,
       activeTab: "lineCharts",
       fileKey: null,
@@ -116,8 +168,12 @@ export default {
       customizeChart: false,
       data: null,
       selectedDiv: 0,
+      // data source content
       fieldsList: [],
       dataList: [],
+      // chart option content
+      chartSeries: [],
+      chartData: [],
     };
   },
   computed: {},
@@ -142,17 +198,11 @@ export default {
     passChartType(type) {
       console.log(type);
     },
+    /* Sort data source content */
     handleDataSource() {
-      // return this.fileContent.map((item) => {
-      //   const keys = Object.keys(item);
-      //   return {
-      //     name: item[keys[0]],
-      //     value: item[keys[1]],
-      //   };
-      // });
+      // return
       let stringFields = [];
       let numberFields = [];
-
       function findOrCreateField(fieldList, fieldName) {
         let field = fieldList.find((item) => item.fieldName === fieldName);
         if (!field) {
@@ -174,31 +224,28 @@ export default {
       });
       this.fieldsList = stringFields;
       this.dataList = numberFields;
-      console.log(this.fieldsList);
+      console.log(this.fieldsList[0]);
       console.log(this.dataList);
     },
+    /* Set chart option  */
     async setChartOption(content, index) {
-      this.chartOption = null;
-      // let groupedData = this.handleDataSource();
       this.selectedDiv = index;
       let option = await getChartOption({ chart: content.replace(/ /g, "_") });
       option = option.data;
-      option.xAxis.data = groupedData[0].values;
-      option.series[0].data = groupedData[1].values;
+      option.xAxis.data = this.fieldsList[0].values;
+      option.series[0].data = this.dataList[0].values;
       this.chartOption = option;
       this.chart.setOption(this.chartOption, true);
     },
-
-    add: function () {
-      this.list.push({ name: "Juan" });
-    },
-    replace: function () {
-      this.list = [{ name: "Edgard" }];
-    },
-    clone: function (el) {
-      return {
-        name: el.name + " cloned",
-      };
+    /* Pass chart detail */
+    async uploadChart() {
+      let res = passChartDetail({
+        chartOption: this.chartOption,
+        chartName: `${this.chartName}_${(Math.random() + 1)
+          .toString(36)
+          .substring(4)}`,
+      });
+      console.log(res);
     },
     log: function (evt) {
       window.console.log(evt);
@@ -219,6 +266,24 @@ export default {
       background-color: #ffffff;
       flex: 2;
       height: calc(100vh - 90px);
+    }
+    .description {
+      display: flex;
+      justify-content: space-between;
+      .el-input {
+        width: 180px;
+      }
+      .el-input__inner {
+        background-color: #e9eef3;
+        border-top-width: 0px;
+        border-left-width: 0px;
+        border-right-width: 0px;
+        border-bottom-width: 1px;
+        /*outline: medium;*/
+      }
+      .el-link {
+        padding-right: 6px;
+      }
     }
   }
   .el-aside {
@@ -251,6 +316,8 @@ export default {
       border-bottom: 1px solid;
     }
     .fields {
+      display: flex;
+      justify-content: space-around;
       .list-group {
         display: -ms-flexbox;
         display: -webkit-box;
