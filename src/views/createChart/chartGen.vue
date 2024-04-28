@@ -33,7 +33,7 @@
                 class="list-group_dataSource_Fields"
                 :list="fieldsList"
                 :group="dataSourceField"
-                @end="end"
+                @end="draggableOnChange"
               >
                 <div
                   class="list-group-item"
@@ -50,7 +50,7 @@
                 class="list-group_dataSource_Data"
                 :list="dataList"
                 :group="dataSourceField"
-                @end="end"
+                @end="draggableOnChange"
               >
                 <div
                   class="list-group-item"
@@ -70,7 +70,7 @@
                 class="list-group_chartOption_Fields"
                 :list="chartSeries"
                 :group="chartOptionField"
-                @end="end"
+                @end="draggableOnChange"
               >
                 <div
                   class="list-group-item"
@@ -87,7 +87,7 @@
                 class="list-group_chartOption_Data"
                 :list="chartData"
                 :group="chartOptionField"
-                @end="end"
+                @end="draggableOnChange"
               >
                 <div
                   class="list-group-item"
@@ -169,7 +169,7 @@ export default {
       isListLoaded: false,
       sideBarStatus: false,
       data: null,
-      selectedDiv: 0,
+      selectedDiv: null,
       // data source content
       fieldsList: [],
       dataList: [],
@@ -246,10 +246,10 @@ export default {
         chart: chartType.replace(/ /g, "_"),
       });
       option = option.data;
-      // option.xAxis.data = this.fieldsList[0].values;
-      // option.series[0].data = this.dataList[0].values;
       this.chartOption = option;
-      // this.chart.setOption(this.chartOption, true);
+      this.chartSeries = [];
+      this.chartData = [];
+      this.chart.clear();
     },
     /* Pass chart detail */
     async uploadChart() {
@@ -260,8 +260,9 @@ export default {
           .toString(36)
           .substring(4)}`,
       });
+      this.$message.success("Chart Uploaded");
     },
-    end(e) {
+    draggableOnChange(e) {
       let from = e.from.className;
       let to = e.to.className;
       let content = e.item.innerText;
@@ -269,32 +270,29 @@ export default {
       function getValuesByFieldName(fieldsList, fieldName) {
         console.log(fieldsList, fieldName);
         const field = fieldsList.find((item) => item.fieldName === fieldName);
-        return field
-          ? field.values
-          : "No values found for the specified fieldName.";
+        return field ? field.values : null;
       }
-      this.chartOption.xAxis.data = getValuesByFieldName(
-        this.fieldsList,
-        content
-      );
-      this.chartOption.series[0].data = getValuesByFieldName(
-        this.dataList,
-        content
-      );
+      if (
+        from == "list-group_dataSource_Data" &&
+        to == "list-group_chartOption_Data"
+      ) {
+        this.chartOption.series[0].data = getValuesByFieldName(
+          this.dataList,
+          content
+        );
+        this.chart.setOption(this.chartOption, true);
+      }
+      if (
+        from == "list-group_dataSource_Fields" &&
+        to == "list-group_chartOption_Fields"
+      ) {
+        this.chartOption.xAxis.data = getValuesByFieldName(
+          this.fieldsList,
+          content
+        );
+        this.chart.setOption(this.chartOption, true);
+      }
       console.log(this.chartOption);
-      this.chart.setOption(this.chartOption, true);
-
-      // if (this.chartType == "Basic Line Chart") {
-      //   this.chartOption.xAxis.data = getValuesByFieldName(
-      //     this.fieldsList,
-      //     content
-      //   );
-      //   this.chartOption.series[0].data = getValuesByFieldName(
-      //     this.dataList,
-      //     content
-      //   );
-      //   console.log(this.chartOption);
-      // }
     },
   },
 };
