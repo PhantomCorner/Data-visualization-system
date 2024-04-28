@@ -27,10 +27,13 @@
             <div class="col-3">
               <h3>Fields</h3>
               <draggable
-                class="list-group"
+                ghostClass="ghost"
+                chosenClass="chosen"
+                animation="300"
+                class="list-group_dataSource_Fields"
                 :list="fieldsList"
-                group="people"
-                @change="log"
+                :group="dataSourceField"
+                @end="end"
               >
                 <div
                   class="list-group-item"
@@ -44,10 +47,10 @@
             <div class="col-3">
               <h3>Data</h3>
               <draggable
-                class="list-group"
+                class="list-group_dataSource_Data"
                 :list="dataList"
-                group="people"
-                @change="log"
+                :group="dataSourceField"
+                @end="end"
               >
                 <div
                   class="list-group-item"
@@ -64,10 +67,10 @@
             <div class="col-3">
               <h3>Chart Fields</h3>
               <draggable
-                class="list-group"
+                class="list-group_chartOption_Fields"
                 :list="chartSeries"
-                group="people"
-                @change="log"
+                :group="chartOptionField"
+                @end="end"
               >
                 <div
                   class="list-group-item"
@@ -81,10 +84,10 @@
             <div class="col-3">
               <h3>Chart Data</h3>
               <draggable
-                class="list-group"
+                class="list-group_chartOption_Data"
                 :list="chartData"
-                group="people"
-                @change="log"
+                :group="chartOptionField"
+                @end="end"
               >
                 <div
                   class="list-group-item"
@@ -165,7 +168,6 @@ export default {
       chartPreviewLinks: null,
       isListLoaded: false,
       sideBarStatus: false,
-      customizeChart: false,
       data: null,
       selectedDiv: 0,
       // data source content
@@ -174,6 +176,15 @@ export default {
       // chart option content
       chartSeries: [],
       chartData: [],
+      // draggable group setting
+      dataSourceField: {
+        pull: "clone",
+        put: false,
+      },
+      chartOptionField: {
+        pull: true,
+        put: true,
+      },
     };
   },
   computed: {},
@@ -200,14 +211,13 @@ export default {
     },
     /* Sort data source content */
     handleDataSource() {
-      // return
       let stringFields = [];
       let numberFields = [];
-      function findOrCreateField(fieldList, fieldName) {
-        let field = fieldList.find((item) => item.fieldName === fieldName);
+      function findOrCreateField(fieldsList, fieldName) {
+        let field = fieldsList.find((item) => item.fieldName === fieldName);
         if (!field) {
           field = { fieldName: fieldName, values: [] };
-          fieldList.push(field);
+          fieldsList.push(field);
         }
         return field;
       }
@@ -224,22 +234,26 @@ export default {
       });
       this.fieldsList = stringFields;
       this.dataList = numberFields;
-      console.log(this.fieldsList[0]);
+      console.log(this.fieldsList);
       console.log(this.dataList);
     },
     /* Set chart option  */
-    async setChartOption(content, index) {
+    async setChartOption(chartType, index) {
+      this.chartType = chartType;
+      console.log(chartType);
       this.selectedDiv = index;
-      let option = await getChartOption({ chart: content.replace(/ /g, "_") });
+      let option = await getChartOption({
+        chart: chartType.replace(/ /g, "_"),
+      });
       option = option.data;
-      option.xAxis.data = this.fieldsList[0].values;
-      option.series[0].data = this.dataList[0].values;
+      // option.xAxis.data = this.fieldsList[0].values;
+      // option.series[0].data = this.dataList[0].values;
       this.chartOption = option;
-      this.chart.setOption(this.chartOption, true);
+      // this.chart.setOption(this.chartOption, true);
     },
     /* Pass chart detail */
     async uploadChart() {
-      let res = passChartDetail({
+      await passChartDetail({
         chartOption: this.chartOption,
         // generate a randoom suffix
         chartName: `${this.chartName}_${(Math.random() + 1)
@@ -247,8 +261,40 @@ export default {
           .substring(4)}`,
       });
     },
-    log: function (evt) {
-      window.console.log(evt);
+    end(e) {
+      let from = e.from.className;
+      let to = e.to.className;
+      let content = e.item.innerText;
+      console.log(from, "->", to, ":", content);
+      function getValuesByFieldName(fieldsList, fieldName) {
+        console.log(fieldsList, fieldName);
+        const field = fieldsList.find((item) => item.fieldName === fieldName);
+        return field
+          ? field.values
+          : "No values found for the specified fieldName.";
+      }
+      this.chartOption.xAxis.data = getValuesByFieldName(
+        this.fieldsList,
+        content
+      );
+      this.chartOption.series[0].data = getValuesByFieldName(
+        this.dataList,
+        content
+      );
+      console.log(this.chartOption);
+      this.chart.setOption(this.chartOption, true);
+
+      // if (this.chartType == "Basic Line Chart") {
+      //   this.chartOption.xAxis.data = getValuesByFieldName(
+      //     this.fieldsList,
+      //     content
+      //   );
+      //   this.chartOption.series[0].data = getValuesByFieldName(
+      //     this.dataList,
+      //     content
+      //   );
+      //   console.log(this.chartOption);
+      // }
     },
   },
 };
@@ -319,8 +365,6 @@ export default {
       display: flex;
       justify-content: space-around;
       .list-group {
-        display: -ms-flexbox;
-        display: -webkit-box;
         display: flex;
         -ms-flex-direction: column;
         -webkit-box-orient: vertical;
@@ -328,14 +372,32 @@ export default {
         flex-direction: column;
         padding-left: 0;
         margin-bottom: 0;
-        .list-group-item {
-          position: relative;
-          display: block;
-          padding: 0.75rem 1.25rem;
-          margin-bottom: -1px;
-          background-color: #fff;
-          border: 1px solid rgba(0, 0, 0, 0.125);
+        &_dataSource_Data,
+        &_dataSource_Fields,
+        &_chartOption_Data,
+        &_chartOption_Fields {
+          background-color: #dfeaf8;
+          .list-group-item {
+            position: relative;
+            display: block;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: -1px;
+            background-color: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            cursor: move;
+          }
         }
+      }
+      .drag {
+        background-color: blue !important;
+        border: solid 3px red;
+      }
+      .chosen {
+        background-color: #000 !important;
+        color: #fff;
+      }
+      .ghost {
+        background-color: red !important;
       }
     }
   }
