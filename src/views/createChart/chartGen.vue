@@ -27,6 +27,7 @@
             <div class="col-3">
               <h3>Fields</h3>
               <draggable
+                :disabled="chartType == null"
                 ghostClass="ghost"
                 chosenClass="chosen"
                 animation="300"
@@ -47,6 +48,7 @@
             <div class="col-3">
               <h3>Data</h3>
               <draggable
+                :disabled="chartType == null"
                 class="list-group_dataSource_Data"
                 :list="dataList"
                 :group="dataSourceField"
@@ -104,12 +106,18 @@
       <el-main>
         <div class="description">
           <el-input v-model="chartName" placeholder="Chart"></el-input>
-          <el-link
-            type="success"
-            @click="uploadChart"
+          <div
+            style="display: flex; align-items: center"
             v-if="chartOption != null"
-            >Submit</el-link
           >
+            <el-link
+              type="primary"
+              @click="uploadChart"
+              v-if="chartOption != null"
+              >Submit</el-link
+            >
+            <el-link type="success" @click="resetChart">Reset</el-link>
+          </div>
         </div>
 
         <div id="chart-container"></div>
@@ -161,6 +169,7 @@ export default {
     return {
       chart: null,
       chartName: "New chart",
+      chartType: null,
       chartOption: null,
       activeTab: "lineCharts",
       fileKey: null,
@@ -262,6 +271,7 @@ export default {
       });
       this.$message.success("Chart Uploaded");
     },
+    /* If user dragged different field, try to render the chart */
     draggableOnChange(e) {
       let from = e.from.className;
       let to = e.to.className;
@@ -293,6 +303,22 @@ export default {
         this.chart.setOption(this.chartOption, true);
       }
       console.log(this.chartOption);
+    },
+    /* Reset chart option and field content */
+    resetChart() {
+      this.$confirm("Are you sure you want to reset the chart?", "Warning", {
+        confirmButtonText: "Confirm",
+        cancelButtonText: "Cancel",
+        type: "warning",
+      })
+        .then(() => {
+          this.chartType = null;
+          this.chartOption = null;
+          this.chart.clear();
+        })
+        .catch(() => {
+          this.$message.warning(`Reset cancelled`);
+        });
     },
   },
 };

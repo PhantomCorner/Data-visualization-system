@@ -86,7 +86,6 @@ export default {
     initChart() {
       setTimeout(() => {
         this.list.forEach((item, index) => {
-          console.log(item);
           let chart = echarts.init(
             document.getElementById(`cardChart${index}`)
           );
@@ -292,6 +291,7 @@ export default {
 .dragCard {
   text-align: center;
   margin: 0 auto;
+
   &_warpper {
     position: relative;
     margin: 0 auto;
@@ -303,6 +303,7 @@ export default {
     box-sizing: border-box;
     transition: all 300ms;
     padding: 0 5px 10px;
+    // border-radius: 5px;
     & > div {
       height: 100%;
     }
@@ -312,12 +313,12 @@ export default {
     background: #fff;
     box-sizing: border-box;
     border: 1px solid #ccc;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+
+    // display: flex;
+    // flex-direction: column;
+    // justify-content: center;
+    // align-items: center;
+    // overflow: hidden;
   }
   &_head {
     box-sizing: border-box;
@@ -334,23 +335,24 @@ export default {
       border-bottom: 1px solid #ccc;
       background: #495967;
       color: #fff;
-      height: 40px;
+      height: 100%;
       flex-shrink: 0;
-      padding: 0 20px;
+
+      // padding: 0 20px;
       width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: flex-start;
+      // display: flex;
+      // flex-direction: row;
+      // align-items: center;
+      // justify-content: flex-start;
     }
   }
   &_body {
     box-sizing: border-box;
     height: 100%;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    // display: flex;
+    // flex-direction: column;
+    // justify-content: center;
     align-content: center;
     color: #838383;
   }
