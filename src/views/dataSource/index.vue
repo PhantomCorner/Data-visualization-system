@@ -12,7 +12,6 @@
       </el-upload>
       <el-button type="primary" @click="getBucketList">Refresh</el-button>
     </div>
-
     <el-table :data="tableData" style="width: 100%">
       <el-table-column prop="Key" label="File Name">
         <template slot-scope="scope">
@@ -40,8 +39,22 @@
       </el-table-column>
     </el-table>
     <!-- File content display -->
-    <el-dialog title="File Content" :visible.sync="dialogVisible" width="30%">
-      <el-table :data="fileContent" style="width: 100%">
+    <el-dialog
+      title="File Content"
+      :visible.sync="dialogVisible"
+      custom-class="custom-dialog"
+      @close="handleClose"
+    >
+      <el-table
+        v-if="dialogVisible"
+        :data="
+          fileContent.slice(
+            (currentPage - 1) * pagesize,
+            currentPage * pagesize
+          )
+        "
+        style="width: 100%"
+      >
         <el-table-column
           v-for="(item, index) in columnLabel"
           :key="index"
@@ -49,6 +62,14 @@
           :prop="item"
         ></el-table-column>
       </el-table>
+      <div style="text-align: center">
+        <el-pagination
+          layout="prev, pager, next,total"
+          :total="total"
+          :page-size="pagesize"
+          @current-change="current_change"
+        ></el-pagination>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -68,6 +89,12 @@ export default {
         region: "ap-southeast-2",
       }),
       tableData: null,
+      //total page
+      total: 0,
+      //page size
+      pagesize: 10,
+      //current page
+      currentPage: 1,
       fileContent: null,
       columnLabel: null,
       fileList: [],
@@ -128,8 +155,12 @@ export default {
       let res = await getFileContent({ key: key });
       this.dialogVisible = true;
       this.fileContent = res.data;
+      this.total = res.total;
       //store column label to render table
       this.columnLabel = Object.keys(this.fileContent[0]);
+    },
+    current_change(currentPage) {
+      this.currentPage = currentPage;
     },
     //check if file exists in bucket by key
     async checkBucket(fileKey) {
@@ -187,11 +218,19 @@ export default {
           this.$message.warning(`Cancelled`);
         });
     },
+    handleClose() {
+      this.total = 0;
+      this.currentPage = 1;
+    },
   },
 };
 </script>
 <style lang="scss">
 .dataSource-container {
   padding: 10px;
+}
+.custom-dialog > .el-dialog__body {
+  height: 500px;
+  overflow: scroll;
 }
 </style>
