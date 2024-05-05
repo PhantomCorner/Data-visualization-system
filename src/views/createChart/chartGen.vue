@@ -22,7 +22,7 @@
           {{ this.fileKey }}
         </div>
         <div class="fileContent">
-          <!-- Datasource conetnt -->
+          <!-- Datasource fields conetnt -->
           <div class="fields">
             <div class="col-3">
               <h3>Fields</h3>
@@ -158,6 +158,7 @@ import draggable from "vuedraggable";
 
 import Hamburger from "@/components/Hamburger";
 import * as echarts from "echarts";
+import { chartOption } from "./chartOption";
 
 export default {
   name: "chartGen",
@@ -176,8 +177,6 @@ export default {
       fileContent: null,
       chartPreviewLinks: null,
       isListLoaded: false,
-      sideBarStatus: false,
-      data: null,
       selectedDiv: null,
       // data source content
       fieldsList: [],
@@ -212,12 +211,6 @@ export default {
       this.chart = echarts.init(document.getElementById("chart-container"));
       this.handleDataSource();
     },
-    toggleSideBar() {
-      this.sideBarStatus = true;
-    },
-    passChartType(type) {
-      console.log(type);
-    },
     /* Sort data source content */
     handleDataSource() {
       let stringFields = [];
@@ -243,8 +236,8 @@ export default {
       });
       this.fieldsList = stringFields;
       this.dataList = numberFields;
-      console.log(this.fieldsList);
-      console.log(this.dataList);
+      // console.log(this.fieldsList);
+      // console.log(this.dataList);
     },
     /* Set chart option  */
     async setChartOption(chartType, index) {
@@ -256,6 +249,7 @@ export default {
       });
       option = option.data;
       this.chartOption = option;
+      console.log(option);
       this.chartSeries = [];
       this.chartData = [];
       this.chart.clear();
@@ -276,31 +270,89 @@ export default {
       let from = e.from.className;
       let to = e.to.className;
       let content = e.item.innerText;
-      console.log(from, "->", to, ":", content);
+      // console.log(from, "->", to, ":", content);
+
       function getValuesByFieldName(fieldsList, fieldName) {
-        console.log(fieldsList, fieldName);
+        // console.log(fieldsList, fieldName);
         const field = fieldsList.find((item) => item.fieldName === fieldName);
         return field ? field.values : null;
       }
-      if (
-        from == "list-group_dataSource_Data" &&
-        to == "list-group_chartOption_Data"
-      ) {
-        this.chartOption.series[0].data = getValuesByFieldName(
-          this.dataList,
-          content
-        );
-        this.chart.setOption(this.chartOption, true);
+
+      /* Render for line chart */
+      if (this.activeTab == "lineCharts") {
+        if (
+          from == "list-group_dataSource_Fields" &&
+          to == "list-group_chartOption_Fields"
+        ) {
+          this.chartOption.xAxis.data = getValuesByFieldName(
+            this.fieldsList,
+            content
+          );
+          this.chart.setOption(this.chartOption, true);
+        }
+        if (
+          from == "list-group_dataSource_Data" &&
+          to == "list-group_chartOption_Data"
+        ) {
+          this.chartOption.series[0].data = getValuesByFieldName(
+            this.dataList,
+            content
+          );
+          this.chart.setOption(this.chartOption, true);
+        }
       }
-      if (
-        from == "list-group_dataSource_Fields" &&
-        to == "list-group_chartOption_Fields"
-      ) {
-        this.chartOption.xAxis.data = getValuesByFieldName(
-          this.fieldsList,
-          content
-        );
-        this.chart.setOption(this.chartOption, true);
+      /* Render option for bar charts */
+      if (this.activeTab == "barCharts") {
+        if (
+          from == "list-group_dataSource_Fields" &&
+          to == "list-group_chartOption_Fields"
+        ) {
+          // remove duplicates
+          this.chartOption.xAxis.data = [
+            ...new Set(getValuesByFieldName(this.fieldsList, content)),
+          ];
+
+          this.chart.setOption(this.chartOption, true);
+        }
+        if (
+          from == "list-group_dataSource_Data" &&
+          to == "list-group_chartOption_Data"
+        ) {
+          // remove duplicates
+          // this.chartOption.series[0].data = [
+          //   ...new Set(getValuesByFieldName(this.dataList, content)),
+          // ];
+          this.chartOption.series[0].data = getValuesByFieldName(
+            this.dataList,
+            content
+          );
+          this.chart.setOption(this.chartOption, true);
+        }
+      }
+      if (this.activeTab == "pieCharts") {
+        //    data: [
+        //   { value: 1048, name: 'Search Engine' },
+        //   { value: 735, name: 'Direct' },
+        //   { value: 580, name: 'Email' },
+        //   { value: 484, name: 'Union Ads' },
+        //   { value: 300, name: 'Video Ads' }
+        // ],
+        if (
+          from == "list-group_dataSource_Fields" &&
+          to == "list-group_chartOption_Fields"
+        ) {
+          this.chart.setOption(this.chartOption, true);
+        }
+        if (
+          from == "list-group_dataSource_Data" &&
+          to == "list-group_chartOption_Data"
+        ) {
+          this.chartOption.series[0].data = this.retainProperties(
+            this.chartSeries[0].fieldName,
+            this.chartData[0].fieldName
+          );
+          this.chart.setOption(this.chartOption, true);
+        }
       }
       console.log(this.chartOption);
     },
@@ -319,6 +371,16 @@ export default {
         .catch(() => {
           this.$message.warning(`Reset cancelled`);
         });
+    },
+    retainProperties(prop1, prop2) {
+      console.log(prop1, prop2);
+      let arr = this.fileContent;
+      return arr.map((obj) => {
+        return {
+          name: obj[prop1],
+          value: obj[prop2],
+        };
+      });
     },
   },
 };

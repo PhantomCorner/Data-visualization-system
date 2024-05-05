@@ -6,7 +6,7 @@
         action=""
         :show-file-list="false"
         :http-request="handleFileChange"
-        accept=".XLSX, .XLSM, .XLS"
+        accept=".XLSX, .XLSM, .XLS, .CSV"
       >
         <el-button type="success">Upload</el-button>
       </el-upload>
