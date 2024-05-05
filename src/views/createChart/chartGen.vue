@@ -123,7 +123,19 @@
         <div id="chart-container"></div>
       </el-main>
       <el-aside width="200px">
-        <el-tabs
+        <el-tabs v-model="activeTab" v-if="isListLoaded" class="chart-tabs">
+          <el-tab-pane label="Common types" name="first">
+            <div
+              v-for="(item, index) in chartPreviewLinks"
+              @click="setChartOption(item.content, index)"
+              class="preview-image"
+              :class="{ 'selected-preview-image': selectedDiv == index }"
+            >
+              <div v-html="item.link"></div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+        <!-- <el-tabs
           class="chart-tabs"
           v-model="activeTab"
           v-if="isListLoaded"
@@ -140,9 +152,9 @@
               class="preview-image"
               :class="{ 'selected-preview-image': selectedDiv == index }"
             >
-              <el-image :src="item.link" />
+              <div class="icon-twrap" v-html="item.link"></div>
             </div> </el-tab-pane
-        ></el-tabs>
+        ></el-tabs> -->
       </el-aside>
     </el-container>
   </div>
@@ -172,7 +184,7 @@ export default {
       chartName: "New chart",
       chartType: null,
       chartOption: null,
-      activeTab: "lineCharts",
+      activeTab: "first",
       fileKey: null,
       fileContent: null,
       chartPreviewLinks: null,
@@ -279,7 +291,7 @@ export default {
       }
 
       /* Render for line chart */
-      if (this.activeTab == "lineCharts") {
+      if (this.chartType == "Line chart") {
         if (
           from == "list-group_dataSource_Fields" &&
           to == "list-group_chartOption_Fields"
@@ -302,7 +314,7 @@ export default {
         }
       }
       /* Render option for bar charts */
-      if (this.activeTab == "barCharts") {
+      if (this.chartType == "Histogram") {
         if (
           from == "list-group_dataSource_Fields" &&
           to == "list-group_chartOption_Fields"
@@ -329,7 +341,7 @@ export default {
           this.chart.setOption(this.chartOption, true);
         }
       }
-      if (this.activeTab == "pieCharts") {
+      if (this.chartType == "Pie chart") {
         //    data: [
         //   { value: 1048, name: 'Search Engine' },
         //   { value: 735, name: 'Direct' },
@@ -421,19 +433,15 @@ export default {
   .el-aside {
     .chart-tabs {
       padding: 5px;
+      svg {
+        width: 60px;
+        height: 60px;
+        margin: 5px;
+      }
       .preview-image {
-        // padding: 2px;
-        width: 180px;
-        // height: 210px;
-        text-align: center;
         cursor: pointer;
       }
       .selected-preview-image {
-        // padding: 2px;
-        width: 180px;
-        // height: 210px;
-        text-align: center;
-        cursor: pointer;
         background: skyblue;
       }
       .demonstration {
