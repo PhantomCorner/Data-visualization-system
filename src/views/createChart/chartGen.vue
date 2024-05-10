@@ -135,26 +135,6 @@
             </div>
           </el-tab-pane>
         </el-tabs>
-        <!-- <el-tabs
-          class="chart-tabs"
-          v-model="activeTab"
-          v-if="isListLoaded"
-          @tab-click="selectedDiv = null"
-        >
-          <el-tab-pane
-            v-for="category in Object.keys(chartPreviewLinks)"
-            :label="category"
-            :name="category"
-          >
-            <div
-              v-for="(item, index) in chartPreviewLinks[category]"
-              @click="setChartOption(item.content, index)"
-              class="preview-image"
-              :class="{ 'selected-preview-image': selectedDiv == index }"
-            >
-              <div class="icon-twrap" v-html="item.link"></div>
-            </div> </el-tab-pane
-        ></el-tabs> -->
       </el-aside>
     </el-container>
   </div>
@@ -341,6 +321,8 @@ export default {
           this.chart.setOption(this.chartOption, true);
         }
       }
+      /* Render option for pie charts */
+
       if (this.chartType == "Pie chart") {
         //    data: [
         //   { value: 1048, name: 'Search Engine' },
@@ -378,6 +360,9 @@ export default {
         .then(() => {
           this.chartType = null;
           this.chartOption = null;
+          this.chartSeries = [];
+          this.chartData = [];
+          this.selectedDiv = null;
           this.chart.clear();
         })
         .catch(() => {
@@ -408,7 +393,6 @@ export default {
     padding: 0;
     #chart-container {
       background-color: #ffffff;
-      flex: 2;
       height: calc(100vh - 90px);
     }
     .description {
@@ -423,7 +407,6 @@ export default {
         border-left-width: 0px;
         border-right-width: 0px;
         border-bottom-width: 1px;
-        /*outline: medium;*/
       }
       .el-link {
         padding-right: 6px;
@@ -450,6 +433,7 @@ export default {
       .el-tab-pane {
         display: flex;
         flex-wrap: wrap;
+        justify-content: space-evenly;
       }
     }
     .file {
