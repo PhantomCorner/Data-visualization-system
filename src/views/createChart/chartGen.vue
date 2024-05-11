@@ -74,12 +74,22 @@
                 :group="chartOptionField"
                 @end="draggableOnChange"
               >
+                <!-- MOUSE HOVER TBD -->
                 <div
                   class="list-group-item"
                   v-for="(element, index) in chartSeries"
                   :key="element.fieldName"
+                  @mouseover="showDelete = true"
+                  @mouseleave="showDelete = false"
                 >
                   {{ element.fieldName }}
+                  <span
+                    v-show="showDelete"
+                    class="del"
+                    @click="removeDraggable(chartSeries, index)"
+                  >
+                    <deleteIcon
+                  /></span>
                 </div>
               </draggable>
             </div>
@@ -94,6 +104,53 @@
                 <div
                   class="list-group-item"
                   v-for="(element, index) in chartData"
+                  :key="element.fieldName"
+                >
+                  {{ element.fieldName }}
+                  <span class="del" @click="removeDraggable(chartData, index)">
+                    <deleteIcon
+                  /></span>
+                </div>
+              </draggable>
+            </div>
+          </div>
+        </div>
+        <!-- Chart customize interface-->
+        <div class="fileContent">
+          <div class="fields">
+            <div class="col-3">
+              <h3>Filter</h3>
+              <draggable
+                :disabled="chartType == null"
+                ghostClass="ghost"
+                chosenClass="chosen"
+                animation="300"
+                class="list-group_dataSource_Fields"
+                :list="fieldsList"
+                :group="dataSourceField"
+                @end="draggableOnChange"
+              >
+                <div
+                  class="list-group-item"
+                  v-for="(element, index) in filterList"
+                  :key="element.fieldName"
+                >
+                  {{ element.fieldName }}
+                </div>
+              </draggable>
+            </div>
+            <div class="col-3">
+              <h3>Sort</h3>
+              <draggable
+                :disabled="chartType == null"
+                class="list-group_dataSource_Data"
+                :list="dataList"
+                :group="dataSourceField"
+                @end="draggableOnChange"
+              >
+                <div
+                  class="list-group-item"
+                  v-for="(element, index) in sortList"
                   :key="element.fieldName"
                 >
                   {{ element.fieldName }}
@@ -151,12 +208,13 @@ import draggable from "vuedraggable";
 import Hamburger from "@/components/Hamburger";
 import * as echarts from "echarts";
 import { chartOption } from "./chartOption";
-
+import deleteIcon from "@/assets/delete";
 export default {
   name: "chartGen",
   components: {
     Hamburger,
     draggable,
+    deleteIcon,
   },
   data() {
     return {
@@ -170,12 +228,17 @@ export default {
       chartPreviewLinks: null,
       isListLoaded: false,
       selectedDiv: null,
+      // toggle delete button
+      showDelete: false,
       // data source content
       fieldsList: [],
       dataList: [],
       // chart option content
       chartSeries: [],
       chartData: [],
+      // data customizati content
+      filterList: [],
+      sortList: [],
       // draggable group setting
       dataSourceField: {
         pull: "clone",
@@ -257,7 +320,7 @@ export default {
       });
       this.$message.success("Chart Uploaded");
     },
-    /* If user dragged different field, try to render the chart */
+    /* If user dragged field into field list, try to render the chart */
     draggableOnChange(e) {
       let from = e.from.className;
       let to = e.to.className;
@@ -272,6 +335,30 @@ export default {
 
       /* Render for line chart */
       if (this.chartType == "Line chart") {
+        if (
+          from == "list-group_dataSource_Fields" &&
+          to == "list-group_chartOption_Fields"
+        ) {
+          this.chartOption.xAxis.data = getValuesByFieldName(
+            this.fieldsList,
+            content
+          );
+          this.chart.setOption(this.chartOption, true);
+        }
+        if (
+          from == "list-group_dataSource_Data" &&
+          to == "list-group_chartOption_Data"
+        ) {
+          this.chartOption.series[0].data = getValuesByFieldName(
+            this.dataList,
+            content
+          );
+          this.chart.setOption(this.chartOption, true);
+        }
+      }
+      /* Render for area line chart */
+
+      if (this.chartType == "Area chart") {
         if (
           from == "list-group_dataSource_Fields" &&
           to == "list-group_chartOption_Fields"
@@ -310,10 +397,6 @@ export default {
           from == "list-group_dataSource_Data" &&
           to == "list-group_chartOption_Data"
         ) {
-          // remove duplicates
-          // this.chartOption.series[0].data = [
-          //   ...new Set(getValuesByFieldName(this.dataList, content)),
-          // ];
           this.chartOption.series[0].data = getValuesByFieldName(
             this.dataList,
             content
@@ -348,7 +431,43 @@ export default {
           this.chart.setOption(this.chartOption, true);
         }
       }
+
+      if (this.chartType == "Rectangular tree diagram") {
+        // {
+        //         name: 'nodeA',
+        //         value: 10
+        //       },
+        //       {
+        //         name: 'nodeB',
+        //         value: 20
+        //       },
+        //       {
+        //         name: 'nodeC',
+        //         value: 40
+        //       }
+        if (
+          from == "list-group_dataSource_Fields" &&
+          to == "list-group_chartOption_Fields"
+        ) {
+          this.chart.setOption(this.chartOption, true);
+        }
+        if (
+          from == "list-group_dataSource_Data" &&
+          to == "list-group_chartOption_Data"
+        ) {
+          this.chartOption.series[0].data = this.retainProperties(
+            this.chartSeries[0].fieldName,
+            this.chartData[0].fieldName
+          );
+          this.chart.setOption(this.chartOption, true);
+        }
+      }
       console.log(this.chartOption);
+    },
+    /* remove draggable item and restore the chart container*/
+    removeDraggable(list, index) {
+      list.splice(index, 1);
+      this.chart.clear();
     },
     /* Reset chart option and field content */
     resetChart() {
@@ -442,6 +561,9 @@ export default {
     .fields {
       display: flex;
       justify-content: space-around;
+      .del {
+        cursor: pointer;
+      }
       .list-group {
         display: flex;
         -ms-flex-direction: column;
@@ -454,7 +576,7 @@ export default {
         &_dataSource_Fields,
         &_chartOption_Data,
         &_chartOption_Fields {
-          background-color: #dfeaf8;
+          background-color: #0c0d0f;
           .list-group-item {
             position: relative;
             display: block;
