@@ -126,10 +126,11 @@
                 animation="300"
                 class="list-group_chartOption_Data"
                 :list="filterList"
-                @add="showFilter = true"
+                @add="toggleFilter"
                 :group="dataCustomizeField"
               >
                 <div
+                  @click="showFilter = true"
                   class="list-group-item"
                   v-for="element in filterList"
                   :key="element.fieldName"
@@ -146,8 +147,9 @@
                 animation="300"
                 class="list-group_chartOption_Data"
                 :list="sortList"
-                @add="showSort = true"
+                @add="toggleSort"
                 :group="dataCustomizeField"
+                @click="showSort = true"
               >
                 <div
                   class="list-group-item"
@@ -177,7 +179,7 @@
             <el-link type="success" @click="resetChart">Reset</el-link>
           </div>
         </div>
-
+        <!-- Chart container -->
         <div id="chart-container"></div>
       </el-main>
       <el-aside width="200px">
@@ -185,6 +187,7 @@
           <el-tab-pane label="Common types" name="first">
             <div
               v-for="(item, index) in chartPreviewLinks"
+              :key="index"
               @click="setChartOption(item.content, index)"
               class="preview-image"
               :class="{ 'selected-preview-image': selectedDiv == index }"
@@ -195,20 +198,39 @@
         </el-tabs>
       </el-aside>
     </el-container>
-    <el-dialog title="Filter setting" :visible.sync="showFilter" width="50%">
+    <el-dialog
+      title="Filter setting"
+      :visible.sync="showFilter"
+      width="50%"
+      :destroy-on-close="true"
+    >
       <div class="filter-container">
-        <div class="content">这里是左侧的文本内容。</div>
-        <!-- <el-checkbox v-model="checked"></el-checkbox> -->
+        <div
+          class="filter-item"
+          v-for="(item, index) in fileContent"
+          :key="index"
+        >
+          <div class="content">
+            {{ item[filterTarget] }}
+          </div>
+          <el-checkbox
+            :checked="true"
+            @change="filterDataSource(item[filterTarget], $event)"
+          ></el-checkbox>
+        </div>
       </div>
+
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogVisible = false"
+        <!-- <el-button type="primary" @click="removeDuplicates"
+          >Remove all duplicates</el-button
+        > -->
+        <el-button type="primary" @click="showFilter = false"
           >Confirm</el-button
         >
-        <el-button @click="dialogVisible = false">Cancel</el-button>
+        <el-button @click="showFilter = false">Cancel</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="提示" :visible.sync="showSort" width="50%">
-      <span>这是一段信息</span>
+    <el-dialog title="Data sorting" :visible.sync="showSort" width="50%">
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="dialogVisible = false"
@@ -263,16 +285,20 @@ export default {
         put: false,
       },
       chartOptionField: {
-        pull: true,
+        pull: false,
         put: true,
       },
       dataCustomizeField: {
         pull: false,
         put: true,
       },
+      // refresh diaglog content
+      refreshDialog: false,
       // toggle data customization window popup
       showFilter: false,
+      filterTarget: null,
       showSort: false,
+      sortTarget: null,
     };
   },
   mounted() {
@@ -486,9 +512,52 @@ export default {
       }
       console.log(this.chartOption);
     },
-    toggleFilter() {
+    toggleFilter(e) {
+      this.filterTarget = e.item.innerText;
       this.showFilter = true;
     },
+    // content & checkbox status
+    // false = unselected
+    // true = selected
+    filterDataSource(conetnt, e) {
+      // remove the object which has been unselected
+      function removeObjectsByKeyValue(array, key, value) {
+        return array.filter((obj) => obj[key] !== value);
+      }
+      console.log(this.filterList[0].fieldName, conetnt, e);
+      this.chartOption.series[0].data = removeObjectsByKeyValue(
+        this.fileContent,
+        this.filterList[0].fieldName,
+        conetnt
+      );
+      this.fileContent = removeObjectsByKeyValue(
+        this.fileContent,
+        this.filterList[0].fieldName,
+        conetnt
+      );
+      this.handleDataSource();
+    },
+    // removeDuplicates() {
+    //   // this.showFilter = false;
+    //   this.fileContent = [...new Set(this.fileContent)];
+    //   const uniqueFruits = Array.from(
+    //     this.fileContent
+    //       .reduce(
+    //         (map, item) => map.set(this.fileContent[this.filterTarget], item),
+    //         new Map()
+    //       )
+    //       .values()
+    //   );
+
+    //   console.log(uniqueFruits);
+
+    //   console.log(this.fileContent);
+    // },
+    toggleSort(e) {
+      // let content = e.item.innerText;
+      this.showSort = true;
+    },
+
     /* remove draggable item and restore the chart container*/
     removeDraggable(list, index) {
       list.splice(index, 1);
@@ -627,23 +696,35 @@ export default {
       }
     }
   }
+  // .el-dialog {
+  //   height: 60vh;
+  //   overflow: scroll;
+  //   .el-dialog__header {
+  //     position: fixed;
+  //     padding: 20px 20px 10px;
+  //   }
+  // }
 }
-.filter-container {
-  display: flex; /* 使用Flexbox进行布局 */
-  justify-content: space-between; /* 使内容和勾选框分布于两端 */
-  align-items: center; /* 垂直居中对齐 */
-  padding: 10px; /* 添加一些内边距 */
-  border: 1px solid #ccc; /* 边框样式 */
-  margin: 10px; /* 外边距，确保元素之间有空隙 */
+.el-dialog {
+  .filter-container {
+    height: 350px;
+    overflow: auto;
+    .filter-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin: 10px;
 
-  .content {
-    padding-right: 10px; /* 在右边添加一些内边距 */
-    border-right: 2px solid #ccc; /* 右侧添加竖线分隔符 */
-  }
-
-  .checkbox {
-    margin-left: 10px; /* 在勾选框左侧添加外边距 */
-    cursor: pointer; /* 鼠标悬停时显示手形图标 */
+      .content {
+        padding-right: 10px;
+      }
+      .checkbox {
+        margin-left: 10px;
+        cursor: pointer;
+      }
+    }
   }
 }
 </style>
