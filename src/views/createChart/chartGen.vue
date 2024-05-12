@@ -21,7 +21,7 @@
           </svg>
           {{ this.fileKey }}
         </div>
-        <div class="fileContent">
+        <div class="fileContent" :disabled="chartType == null">
           <!-- Datasource fields conetnt -->
           <div class="fields">
             <div class="col-3">
@@ -38,7 +38,7 @@
               >
                 <div
                   class="list-group-item"
-                  v-for="(element, index) in fieldsList"
+                  v-for="element in fieldsList"
                   :key="element.fieldName"
                 >
                   {{ element.fieldName }}
@@ -56,7 +56,7 @@
               >
                 <div
                   class="list-group-item"
-                  v-for="(element, index) in dataList"
+                  v-for="element in dataList"
                   :key="element.fieldName"
                 >
                   {{ element.fieldName }}
@@ -77,7 +77,7 @@
                 <!-- MOUSE HOVER TBD -->
                 <div
                   class="list-group-item"
-                  v-for="(element, index) in chartSeries"
+                  v-for="element in chartSeries"
                   :key="element.fieldName"
                   @mouseover="showDelete = true"
                   @mouseleave="showDelete = false"
@@ -103,7 +103,7 @@
               >
                 <div
                   class="list-group-item"
-                  v-for="(element, index) in chartData"
+                  v-for="element in chartData"
                   :key="element.fieldName"
                 >
                   {{ element.fieldName }}
@@ -121,18 +121,17 @@
             <div class="col-3">
               <h3>Filter</h3>
               <draggable
-                :disabled="chartType == null"
                 ghostClass="ghost"
                 chosenClass="chosen"
                 animation="300"
-                class="list-group_dataSource_Fields"
-                :list="fieldsList"
-                :group="dataSourceField"
-                @end="draggableOnChange"
+                class="list-group_chartOption_Data"
+                :list="filterList"
+                @add="showFilter = true"
+                :group="dataCustomizeField"
               >
                 <div
                   class="list-group-item"
-                  v-for="(element, index) in filterList"
+                  v-for="element in filterList"
                   :key="element.fieldName"
                 >
                   {{ element.fieldName }}
@@ -142,15 +141,17 @@
             <div class="col-3">
               <h3>Sort</h3>
               <draggable
-                :disabled="chartType == null"
-                class="list-group_dataSource_Data"
-                :list="dataList"
-                :group="dataSourceField"
-                @end="draggableOnChange"
+                ghostClass="ghost"
+                chosenClass="chosen"
+                animation="300"
+                class="list-group_chartOption_Data"
+                :list="sortList"
+                @add="showSort = true"
+                :group="dataCustomizeField"
               >
                 <div
                   class="list-group-item"
-                  v-for="(element, index) in sortList"
+                  v-for="element in sortList"
                   :key="element.fieldName"
                 >
                   {{ element.fieldName }}
@@ -194,6 +195,27 @@
         </el-tabs>
       </el-aside>
     </el-container>
+    <el-dialog title="Filter setting" :visible.sync="showFilter" width="50%">
+      <div class="filter-container">
+        <div class="content">这里是左侧的文本内容。</div>
+        <!-- <el-checkbox v-model="checked"></el-checkbox> -->
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogVisible = false"
+          >Confirm</el-button
+        >
+        <el-button @click="dialogVisible = false">Cancel</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="提示" :visible.sync="showSort" width="50%">
+      <span>这是一段信息</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogVisible = false"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -204,15 +226,11 @@ import {
   passChartDetail,
 } from "@/api/chartGen.js";
 import draggable from "vuedraggable";
-
-import Hamburger from "@/components/Hamburger";
 import * as echarts from "echarts";
-import { chartOption } from "./chartOption";
 import deleteIcon from "@/assets/delete";
 export default {
   name: "chartGen",
   components: {
-    Hamburger,
     draggable,
     deleteIcon,
   },
@@ -232,13 +250,13 @@ export default {
       showDelete: false,
       // data source content
       fieldsList: [],
+      // data customization content
+      filterList: [],
+      sortList: [],
       dataList: [],
       // chart option content
       chartSeries: [],
       chartData: [],
-      // data customizati content
-      filterList: [],
-      sortList: [],
       // draggable group setting
       dataSourceField: {
         pull: "clone",
@@ -248,9 +266,15 @@ export default {
         pull: true,
         put: true,
       },
+      dataCustomizeField: {
+        pull: false,
+        put: true,
+      },
+      // toggle data customization window popup
+      showFilter: false,
+      showSort: false,
     };
   },
-  computed: {},
   mounted() {
     this.fileKey = this.$route.params.fileKey;
     this.init();
@@ -325,7 +349,6 @@ export default {
       let from = e.from.className;
       let to = e.to.className;
       let content = e.item.innerText;
-      // console.log(from, "->", to, ":", content);
 
       function getValuesByFieldName(fieldsList, fieldName) {
         // console.log(fieldsList, fieldName);
@@ -405,7 +428,6 @@ export default {
         }
       }
       /* Render option for pie charts */
-
       if (this.chartType == "Pie chart") {
         //    data: [
         //   { value: 1048, name: 'Search Engine' },
@@ -463,6 +485,9 @@ export default {
         }
       }
       console.log(this.chartOption);
+    },
+    toggleFilter() {
+      this.showFilter = true;
     },
     /* remove draggable item and restore the chart container*/
     removeDraggable(list, index) {
@@ -560,10 +585,11 @@ export default {
     }
     .fields {
       display: flex;
-      justify-content: space-around;
+      justify-content: space-between;
       .del {
         cursor: pointer;
       }
+
       .list-group {
         display: flex;
         -ms-flex-direction: column;
@@ -602,16 +628,22 @@ export default {
     }
   }
 }
+.filter-container {
+  display: flex; /* 使用Flexbox进行布局 */
+  justify-content: space-between; /* 使内容和勾选框分布于两端 */
+  align-items: center; /* 垂直居中对齐 */
+  padding: 10px; /* 添加一些内边距 */
+  border: 1px solid #ccc; /* 边框样式 */
+  margin: 10px; /* 外边距，确保元素之间有空隙 */
 
-.hamburger-container {
-  line-height: 46px;
-  height: 100%;
-  float: right;
-  cursor: pointer;
-  transition: background 0.3s;
-  -webkit-tap-highlight-color: transparent;
-  &:hover {
-    background: rgba(0, 0, 0, 0.025);
+  .content {
+    padding-right: 10px; /* 在右边添加一些内边距 */
+    border-right: 2px solid #ccc; /* 右侧添加竖线分隔符 */
+  }
+
+  .checkbox {
+    margin-left: 10px; /* 在勾选框左侧添加外边距 */
+    cursor: pointer; /* 鼠标悬停时显示手形图标 */
   }
 }
 </style>
