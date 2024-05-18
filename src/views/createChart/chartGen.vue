@@ -180,6 +180,22 @@
           </div>
         </div>
         <!-- Chart container -->
+        <table class="table table-striped" v-if="showSchedule">
+          <thead class="thead-dark">
+            <draggable v-model="headers" tag="tr">
+              <th v-for="header in headers" :key="header" scope="col">
+                {{ header }}
+              </th>
+            </draggable>
+          </thead>
+          <tbody>
+            <tr v-for="item in fileContent" :key="item.fieldName">
+              <td v-for="header in headers" :key="header">
+                {{ item[header] }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <div id="chart-container"></div>
       </el-main>
       <el-aside width="200px">
@@ -199,6 +215,7 @@
       </el-aside>
     </el-container>
     <el-dialog
+      v-if="chartOption != null"
       title="Filter setting"
       :visible.sync="showFilter"
       width="50%"
@@ -214,19 +231,16 @@
             {{ item[filterTarget] }}
           </div>
           <el-checkbox
-            :checked="true"
+            v-model="item.checked"
             @change="filterDataSource(item[filterTarget], $event)"
           ></el-checkbox>
         </div>
       </div>
-
       <span slot="footer" class="dialog-footer">
         <!-- <el-button type="primary" @click="removeDuplicates"
           >Remove all duplicates</el-button
         > -->
-        <el-button type="primary" @click="showFilter = false"
-          >Confirm</el-button
-        >
+        <el-button type="primary" @click="applyFilter()">Confirm</el-button>
         <el-button @click="showFilter = false">Cancel</el-button>
       </span>
     </el-dialog>
@@ -268,6 +282,8 @@ export default {
       chartPreviewLinks: null,
       isListLoaded: false,
       selectedDiv: null,
+      // display table
+      showSchedule: false,
       // toggle delete button
       showDelete: false,
       // data source content
@@ -299,6 +315,15 @@ export default {
       filterTarget: null,
       showSort: false,
       sortTarget: null,
+      headers: [],
+      stack: [],
+
+      list: [
+        { id: 1, name: "Abby", sport: "basket" },
+        { id: 2, name: "Brooke", sport: "foot" },
+        { id: 3, name: "Courtenay", sport: "volley" },
+        { id: 4, name: "David", sport: "rugby" },
+      ],
     };
   },
   mounted() {
@@ -329,6 +354,7 @@ export default {
         return field;
       }
       this.fileContent.forEach((item) => {
+        this.$set(item, "checked", true);
         Object.entries(item).forEach(([key, value]) => {
           if (typeof value === "string") {
             let field = findOrCreateField(stringFields, key);
@@ -339,6 +365,7 @@ export default {
           }
         });
       });
+      console.log(this.fileContent);
       this.fieldsList = stringFields;
       this.dataList = numberFields;
       // console.log(this.fieldsList);
@@ -347,17 +374,24 @@ export default {
     /* Set chart option  */
     async setChartOption(chartType, index) {
       this.chartType = chartType;
-      console.log(chartType);
+      // console.log(chartType);
       this.selectedDiv = index;
       let option = await getChartOption({
         chart: chartType.replace(/ /g, "_"),
       });
       option = option.data;
       this.chartOption = option;
-      console.log(option);
+      // console.log(option);
       this.chartSeries = [];
       this.chartData = [];
       this.chart.clear();
+      this.showSchedule = false;
+      if (chartType == "Schedule") {
+        this.headers = Array.from(
+          new Set(this.fileContent.flatMap(Object.keys))
+        );
+        this.showSchedule = true;
+      }
     },
     /* Pass chart detail */
     async uploadChart() {
@@ -510,7 +544,7 @@ export default {
           this.chart.setOption(this.chartOption, true);
         }
       }
-      console.log(this.chartOption);
+      // console.log(this.chartOption);
     },
     toggleFilter(e) {
       this.filterTarget = e.item.innerText;
@@ -520,41 +554,31 @@ export default {
     // false = unselected
     // true = selected
     filterDataSource(conetnt, e) {
-      // remove the object which has been unselected
-      function removeObjectsByKeyValue(array, key, value) {
-        return array.filter((obj) => obj[key] !== value);
+      let removeObjectsByKeyValue = (value) => {
+        return this.chartOption.series[0].data.filter(
+          (obj) => obj.name !== value
+        );
+      };
+      // if remove
+      if (e == false) {
+        // push a copy of chart option to stack
+        this.stack.push(JSON.parse(JSON.stringify(this.chartOption)));
+        this.chartOption.series[0].data = removeObjectsByKeyValue(conetnt);
+        console.log(this.chartOption.series[0].data);
       }
-      console.log(this.filterList[0].fieldName, conetnt, e);
-      this.chartOption.series[0].data = removeObjectsByKeyValue(
-        this.fileContent,
-        this.filterList[0].fieldName,
-        conetnt
-      );
-      this.fileContent = removeObjectsByKeyValue(
-        this.fileContent,
-        this.filterList[0].fieldName,
-        conetnt
-      );
-      this.handleDataSource();
+      // if restore
+      if (e == true) {
+        this.chartOption = this.stack.pop();
+        console.log(this.chartOption.series[0].data);
+        this.stack.push(this.chartOption);
+      }
+      console.log(this.fileContent);
     },
-    // removeDuplicates() {
-    //   // this.showFilter = false;
-    //   this.fileContent = [...new Set(this.fileContent)];
-    //   const uniqueFruits = Array.from(
-    //     this.fileContent
-    //       .reduce(
-    //         (map, item) => map.set(this.fileContent[this.filterTarget], item),
-    //         new Map()
-    //       )
-    //       .values()
-    //   );
-
-    //   console.log(uniqueFruits);
-
-    //   console.log(this.fileContent);
-    // },
-    toggleSort(e) {
-      // let content = e.item.innerText;
+    applyFilter() {
+      this.chart.setOption(this.chartOption, true);
+      this.showFilter = false;
+    },
+    toggleSort() {
       this.showSort = true;
     },
 
@@ -583,7 +607,6 @@ export default {
         });
     },
     retainProperties(prop1, prop2) {
-      console.log(prop1, prop2);
       let arr = this.fileContent;
       return arr.map((obj) => {
         return {
@@ -705,6 +728,19 @@ export default {
   //   }
   // }
 }
+.table {
+  width: 100%;
+  margin: 1rem;
+  color: #212529;
+  .thead-dark th {
+    color: #fff;
+    background-color: #343a40;
+    border-color: #454d55;
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+  }
+}
+
 .el-dialog {
   .filter-container {
     height: 350px;
