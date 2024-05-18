@@ -16,15 +16,16 @@ export function getChartOption(data) {
 
 export function passChartDetail(data) {
   return request({
-    url: "/chartGen/passChartDetail",
+    url: "/chartGen/uploadChart",
     method: "post",
     data,
   });
 }
 
-export function getAllChart() {
+export function getAllChart(data) {
   return request({
     url: "/chartGen/allCharts",
-    method: "get",
+    method: "post",
+    data,
   });
 }

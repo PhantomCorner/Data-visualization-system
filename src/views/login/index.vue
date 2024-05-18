@@ -71,8 +71,6 @@
 </template>
 
 <script>
-import { getValue, setValue } from "@/api/userName";
-
 export default {
   name: "Login",
   data() {

@@ -16,6 +16,7 @@
 import DragCard from "@/components/card/index.vue";
 import { mapGetters } from "vuex";
 import { getAllChart } from "@/api/chartGen";
+import { getToken } from "@/utils/auth";
 
 export default {
   name: "Dashboard",
@@ -35,7 +36,7 @@ export default {
   },
   methods: {
     async init() {
-      let res = await getAllChart();
+      let res = await getAllChart({ token: getToken() });
       console.log(res);
       res.data.forEach((item) => {
         this.list.push({

@@ -239,6 +239,7 @@
 </template>
 <script>
 import { getFileContent } from "@/api/dataSource";
+import { getToken } from "@/utils/auth";
 import {
   getAllChartPreview,
   getChartOption,
@@ -362,7 +363,7 @@ export default {
       this.chartOption = option;
       console.log(option);
     },
-    /* Pass chart detail */
+    /* Upload chart to database */
     async uploadChart() {
       await passChartDetail({
         chartOption: this.chartOption,
@@ -370,6 +371,7 @@ export default {
         chartName: `${this.chartName}_${(Math.random() + 1)
           .toString(36)
           .substring(4)}`,
+        token: getToken(),
       });
       this.$message.success("Chart Uploaded");
     },
