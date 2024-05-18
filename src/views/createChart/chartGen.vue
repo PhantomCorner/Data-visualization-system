@@ -354,6 +354,7 @@ export default {
         return field;
       }
       this.fileContent.forEach((item) => {
+        // set up checkbox value for filter function
         this.$set(item, "checked", true);
         Object.entries(item).forEach(([key, value]) => {
           if (typeof value === "string") {
@@ -365,23 +366,20 @@ export default {
           }
         });
       });
-      console.log(this.fileContent);
       this.fieldsList = stringFields;
       this.dataList = numberFields;
-      // console.log(this.fieldsList);
-      // console.log(this.dataList);
     },
     /* Set chart option  */
     async setChartOption(chartType, index) {
       this.chartType = chartType;
-      // console.log(chartType);
+      console.log(chartType);
       this.selectedDiv = index;
       let option = await getChartOption({
         chart: chartType.replace(/ /g, "_"),
       });
       option = option.data;
       this.chartOption = option;
-      // console.log(option);
+      console.log(option);
       this.chartSeries = [];
       this.chartData = [];
       this.chart.clear();
@@ -463,7 +461,7 @@ export default {
           this.chart.setOption(this.chartOption, true);
         }
       }
-      /* Render option for bar charts */
+      /* Render option for Histogram charts */
       if (this.chartType == "Histogram") {
         if (
           from == "list-group_dataSource_Fields" &&
@@ -473,7 +471,6 @@ export default {
           this.chartOption.xAxis.data = [
             ...new Set(getValuesByFieldName(this.fieldsList, content)),
           ];
-
           this.chart.setOption(this.chartOption, true);
         }
         if (
@@ -514,37 +511,28 @@ export default {
         }
       }
 
-      if (this.chartType == "Rectangular tree diagram") {
-        // {
-        //         name: 'nodeA',
-        //         value: 10
-        //       },
-        //       {
-        //         name: 'nodeB',
-        //         value: 20
-        //       },
-        //       {
-        //         name: 'nodeC',
-        //         value: 40
-        //       }
+      if (this.chartType == "Bar graph") {
         if (
           from == "list-group_dataSource_Fields" &&
           to == "list-group_chartOption_Fields"
         ) {
+          // remove duplicates
+          this.chartOption.yAxis.data = [
+            ...new Set(getValuesByFieldName(this.fieldsList, content)),
+          ];
           this.chart.setOption(this.chartOption, true);
         }
         if (
           from == "list-group_dataSource_Data" &&
           to == "list-group_chartOption_Data"
         ) {
-          this.chartOption.series[0].data = this.retainProperties(
-            this.chartSeries[0].fieldName,
-            this.chartData[0].fieldName
+          this.chartOption.series[0].data = getValuesByFieldName(
+            this.dataList,
+            content
           );
           this.chart.setOption(this.chartOption, true);
         }
       }
-      // console.log(this.chartOption);
     },
     toggleFilter(e) {
       this.filterTarget = e.item.innerText;
@@ -572,7 +560,6 @@ export default {
         console.log(this.chartOption.series[0].data);
         this.stack.push(this.chartOption);
       }
-      console.log(this.fileContent);
     },
     applyFilter() {
       this.chart.setOption(this.chartOption, true);
@@ -601,6 +588,7 @@ export default {
           this.chartData = [];
           this.selectedDiv = null;
           this.chart.clear();
+          this.filterList = [];
         })
         .catch(() => {
           this.$message.warning(`Reset cancelled`);
