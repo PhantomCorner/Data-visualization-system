@@ -74,17 +74,13 @@
                 :group="chartOptionField"
                 @end="draggableOnChange"
               >
-                <!-- MOUSE HOVER TBD -->
                 <div
                   class="list-group-item"
                   v-for="element in chartSeries"
                   :key="element.fieldName"
-                  @mouseover="showDelete = true"
-                  @mouseleave="showDelete = false"
                 >
                   {{ element.fieldName }}
                   <span
-                    v-show="showDelete"
                     class="del"
                     @click="removeDraggable(chartSeries, index)"
                   >
@@ -149,12 +145,12 @@
                 :list="sortList"
                 @add="toggleSort"
                 :group="dataCustomizeField"
-                @click="showSort = true"
               >
                 <div
                   class="list-group-item"
                   v-for="element in sortList"
                   :key="element.fieldName"
+                  @click="showSort = true"
                 >
                   {{ element.fieldName }}
                 </div>
@@ -180,22 +176,6 @@
           </div>
         </div>
         <!-- Chart container -->
-        <table class="table table-striped" v-if="showSchedule">
-          <thead class="thead-dark">
-            <draggable v-model="headers" tag="tr">
-              <th v-for="header in headers" :key="header" scope="col">
-                {{ header }}
-              </th>
-            </draggable>
-          </thead>
-          <tbody>
-            <tr v-for="item in fileContent" :key="item.fieldName">
-              <td v-for="header in headers" :key="header">
-                {{ item[header] }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
         <div id="chart-container"></div>
       </el-main>
       <el-aside width="200px">
@@ -244,12 +224,15 @@
         <el-button @click="showFilter = false">Cancel</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="Data sorting" :visible.sync="showSort" width="50%">
+
+    <el-dialog title="Data sorting" :visible.sync="showSort" width="30%">
+      <el-radio-group v-model="sortForm">
+        <el-radio-button label="Low to High"></el-radio-button>
+        <el-radio-button label="High to Low"></el-radio-button>
+      </el-radio-group>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogVisible = false"
-          >确 定</el-button
-        >
+        <el-button @click="showSort = false">取 消</el-button>
+        <el-button type="primary" @click="applySort">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -282,8 +265,6 @@ export default {
       chartPreviewLinks: null,
       isListLoaded: false,
       selectedDiv: null,
-      // display table
-      showSchedule: false,
       // toggle delete button
       showDelete: false,
       // data source content
@@ -313,17 +294,12 @@ export default {
       // toggle data customization window popup
       showFilter: false,
       filterTarget: null,
+      sortTarget: null,
       showSort: false,
+      sortForm: 1,
       sortTarget: null,
       headers: [],
       stack: [],
-
-      list: [
-        { id: 1, name: "Abby", sport: "basket" },
-        { id: 2, name: "Brooke", sport: "foot" },
-        { id: 3, name: "Courtenay", sport: "volley" },
-        { id: 4, name: "David", sport: "rugby" },
-      ],
     };
   },
   mounted() {
@@ -377,19 +353,14 @@ export default {
       let option = await getChartOption({
         chart: chartType.replace(/ /g, "_"),
       });
+      this.chartSeries = [];
+      this.chartData = [];
+      this.sortList = [];
+      this.filterList = [];
+      this.chart.clear();
       option = option.data;
       this.chartOption = option;
       console.log(option);
-      this.chartSeries = [];
-      this.chartData = [];
-      this.chart.clear();
-      this.showSchedule = false;
-      if (chartType == "Schedule") {
-        this.headers = Array.from(
-          new Set(this.fileContent.flatMap(Object.keys))
-        );
-        this.showSchedule = true;
-      }
     },
     /* Pass chart detail */
     async uploadChart() {
@@ -486,13 +457,6 @@ export default {
       }
       /* Render option for pie charts */
       if (this.chartType == "Pie chart") {
-        //    data: [
-        //   { value: 1048, name: 'Search Engine' },
-        //   { value: 735, name: 'Direct' },
-        //   { value: 580, name: 'Email' },
-        //   { value: 484, name: 'Union Ads' },
-        //   { value: 300, name: 'Video Ads' }
-        // ],
         if (
           from == "list-group_dataSource_Fields" &&
           to == "list-group_chartOption_Fields"
@@ -510,7 +474,25 @@ export default {
           this.chart.setOption(this.chartOption, true);
         }
       }
-
+      if (this.chartType == "Rectangular tree diagram") {
+        if (
+          from == "list-group_dataSource_Fields" &&
+          to == "list-group_chartOption_Fields"
+        ) {
+          this.chart.setOption(this.chartOption, true);
+        }
+        if (
+          from == "list-group_dataSource_Data" &&
+          to == "list-group_chartOption_Data"
+        ) {
+          this.chartOption.series[0].data = this.retainProperties(
+            this.chartSeries[0].fieldName,
+            this.chartData[0].fieldName
+          );
+        }
+        this.chart.setOption(this.chartOption, true);
+      }
+      /* Render option for Bar chart */
       if (this.chartType == "Bar graph") {
         if (
           from == "list-group_dataSource_Fields" &&
@@ -538,6 +520,18 @@ export default {
       this.filterTarget = e.item.innerText;
       this.showFilter = true;
     },
+    toggleSort(e) {
+      this.sortTarget = e.item.innerText;
+      this.showSort = true;
+    },
+    applyFilter() {
+      this.chart.setOption(this.chartOption, true);
+      this.showFilter = false;
+    },
+    applySort() {
+      console.log(this.sortForm);
+      this.showSort = false;
+    },
     // content & checkbox status
     // false = unselected
     // true = selected
@@ -561,13 +555,6 @@ export default {
         this.stack.push(this.chartOption);
       }
     },
-    applyFilter() {
-      this.chart.setOption(this.chartOption, true);
-      this.showFilter = false;
-    },
-    toggleSort() {
-      this.showSort = true;
-    },
 
     /* remove draggable item and restore the chart container*/
     removeDraggable(list, index) {
@@ -582,17 +569,21 @@ export default {
         type: "warning",
       })
         .then(() => {
-          this.chartType = null;
-          this.chartOption = null;
-          this.chartSeries = [];
-          this.chartData = [];
-          this.selectedDiv = null;
-          this.chart.clear();
-          this.filterList = [];
+          this.resetAll();
         })
         .catch(() => {
           this.$message.warning(`Reset cancelled`);
         });
+    },
+    resetAll() {
+      this.chartType = null;
+      this.chartOption = null;
+      this.chartSeries = [];
+      this.chartData = [];
+      this.selectedDiv = null;
+      this.chart.clear();
+      this.filterList = [];
+      this.sortList = [];
     },
     retainProperties(prop1, prop2) {
       let arr = this.fileContent;
