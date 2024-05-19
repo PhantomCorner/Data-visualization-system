@@ -135,7 +135,7 @@
                 </div>
               </draggable>
             </div>
-            <div class="col-3">
+            <!-- <div class="col-3">
               <h3>Sort</h3>
               <draggable
                 ghostClass="ghost"
@@ -155,7 +155,7 @@
                   {{ element.fieldName }}
                 </div>
               </draggable>
-            </div>
+            </div> -->
           </div>
         </div>
       </el-aside>
@@ -248,6 +248,7 @@ import {
 import draggable from "vuedraggable";
 import * as echarts from "echarts";
 import deleteIcon from "@/assets/delete";
+import { chartOption } from "./chartOption";
 export default {
   name: "chartGen",
   components: {
@@ -361,7 +362,6 @@ export default {
       this.chart.clear();
       option = option.data;
       this.chartOption = option;
-      console.log(option);
     },
     /* Upload chart to database */
     async uploadChart() {
@@ -517,6 +517,7 @@ export default {
           this.chart.setOption(this.chartOption, true);
         }
       }
+      console.log(this.chartOption);
     },
     toggleFilter(e) {
       this.filterTarget = e.item.innerText;
@@ -543,21 +544,50 @@ export default {
           (obj) => obj.name !== value
         );
       };
+      function removeValueBySubscript(arrA, arrB, element) {
+        const index = arrA.indexOf(element);
+        arrA.splice(index, 1);
+        arrB.splice(index, 1);
+        console.log(element, arrA, arrB);
+        return { arrA, arrB };
+      }
       // if remove
       if (e == false) {
         // push a copy of chart option to stack
         this.stack.push(JSON.parse(JSON.stringify(this.chartOption)));
-        this.chartOption.series[0].data = removeObjectsByKeyValue(conetnt);
-        console.log(this.chartOption.series[0].data);
+        if (
+          ["Histogram", "Line chart", "Area chart"].includes(this.chartType)
+        ) {
+          let splice = removeValueBySubscript(
+            this.chartOption.xAxis.data,
+            this.chartOption.series[0].data,
+            conetnt
+          );
+          this.chartOption.xAxis.data = splice.arrA;
+          this.chartOption.series[0].data = splice.arrB;
+        }
+
+        if (this.chartType === "Bar graph") {
+          let splice = removeValueBySubscript(
+            this.chartOption.yAxis.data,
+            this.chartOption.series[0].data,
+            conetnt
+          );
+          this.chartOption.yAxis.data = splice.arrA;
+          this.chartOption.series[0].data = splice.arrB;
+        }
+        if (
+          ["Rectangular tree diagram", "Pie chart"].includes(this.chartType)
+        ) {
+          this.chartOption.series[0].data = removeObjectsByKeyValue(conetnt);
+        }
       }
       // if restore
       if (e == true) {
         this.chartOption = this.stack.pop();
-        console.log(this.chartOption.series[0].data);
         this.stack.push(this.chartOption);
       }
     },
-
     /* remove draggable item and restore the chart container*/
     removeDraggable(list, index) {
       list.splice(index, 1);
