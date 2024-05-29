@@ -128,7 +128,8 @@ export default {
               this.$message.success("Login success");
               this.loading = true;
               setTimeout(() => {
-                this.$router.push({ path: this.redirect || "/" });
+                this.$router.push({ path: "/dashboard/all" });
+                // this.$router.push({ path: this.redirect || "/" });
                 this.loading = false;
               }, 1500);
             })

@@ -1,9 +1,10 @@
 import request from "@/utils/request";
 
-export function getDataSource() {
+export function getDataSource(token) {
   return request({
     url: "/dataSource/allFile",
     method: "get",
+    params: { token },
   });
 }
 export function getFileContent(data) {

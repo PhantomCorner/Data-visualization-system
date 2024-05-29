@@ -77,6 +77,8 @@
 import { ak, ask } from "../../../ak.js";
 import AWS from "aws-sdk";
 import { getDataSource, getFileContent } from "@/api/dataSource";
+import { getToken } from "@/utils/auth";
+
 export default {
   name: "DataSource",
   data() {
@@ -110,10 +112,13 @@ export default {
       console.log("file change", file);
       if (file) {
         let params = {
-          Bucket: "compx576-bucket",
+          Bucket: "",
           Key: file.name,
           Body: file,
         };
+        getToken() == "admin-token"
+          ? (params.Bucket = "compx576-user1-bucket")
+          : (params.Bucket = "compx576-user2-bucket");
         let isExist = await this.checkBucket(params.Key);
         if (isExist) {
           this.$confirm(
@@ -152,7 +157,7 @@ export default {
     },
     //pass file key
     async passFileName(key) {
-      let res = await getFileContent({ key: key });
+      let res = await getFileContent({ token: getToken(), key: key });
       this.dialogVisible = true;
       this.fileContent = res.data;
       this.total = res.total;
@@ -165,9 +170,12 @@ export default {
     //check if file exists in bucket by key
     async checkBucket(fileKey) {
       const params = {
-        Bucket: "compx576-bucket",
+        Bucket: "",
         Key: fileKey,
       };
+      getToken() == "admin-token"
+        ? (params.Bucket = "compx576-user1-bucket")
+        : (params.Bucket = "compx576-user2-bucket");
       try {
         await this.s3.headObject(params).promise();
         console.log("File Found in S3");
@@ -189,12 +197,15 @@ export default {
       }
     },
     async getBucketList() {
-      let res = await getDataSource();
+      let res = await getDataSource(getToken());
       this.tableData = res.data;
     },
     //delete file by file key
     async deleteFile(fileKey) {
-      let params = { Bucket: "compx576-bucket", Key: fileKey };
+      let params = { Bucket: "", Key: fileKey };
+      getToken() == "admin-token"
+        ? (params.Bucket = "compx576-user1-bucket")
+        : (params.Bucket = "compx576-user2-bucket");
       this.$confirm(
         "This will permanently delete the data source, are you sure?",
         "Warning",
