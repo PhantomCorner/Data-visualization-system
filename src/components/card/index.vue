@@ -20,6 +20,12 @@
               </div>
             </slot>
           </div>
+          <span
+            style="float: right; cursor: pointer"
+            @click="clickDelete(item.id)"
+          >
+            <deleteIcon
+          /></span>
           <div class="dragCard_body" :id="`cardChart${index}`"></div>
         </div>
       </div>
@@ -29,8 +35,14 @@
 
 <script>
 import * as echarts from "echarts";
+import deleteIcon from "@/assets/delete";
+import { dropChart } from "@/api/chartGen";
+
 export default {
   name: "DragCard",
+  components: {
+    deleteIcon,
+  },
   props: {
     list: {
       type: Array,
@@ -282,6 +294,32 @@ export default {
           that.timer = null;
         }, 300);
       }
+    },
+    async clickDelete(id) {
+      this.$confirm("Are you sure you want to drop this chart?", "Warning", {
+        confirmButtonText: "Confirm",
+        cancelButtonText: "Cancel",
+        type: "warning",
+      })
+        .then(() => {
+          dropChart({ chartID: id }).then((res) => {
+            this.$message.success(res.message);
+          });
+        })
+        .catch(() => {
+          this.$message.warning(`Operation cancelled`);
+        });
+      // this.$confirm("Are you sure you want to drop this chart?", "Warning", {
+      //   confirmButtonText: "Confirm",
+      //   cancelButtonText: "Cancel",
+      //   type: "warning",
+      // })
+      //   .then(() => {
+      //     dropChart({ chartID: id });
+      //   })
+      //   .catch(() => {
+      //     this.$message.warning(`Request cancelled`);
+      //   });
     },
   },
 };

@@ -29,3 +29,11 @@ export function getAllChart(data) {
     data,
   });
 }
+
+export function dropChart(data) {
+  return request({
+    url: "/dashboard/dropChart",
+    method: "post",
+    data,
+  });
+}

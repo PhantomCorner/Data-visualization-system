@@ -310,7 +310,7 @@ export default {
   },
   methods: {
     async init() {
-      let res = await getFileContent({ key: this.fileKey });
+      let res = await getFileContent({ token: getToken(), key: this.fileKey });
       this.fileContent = res.data;
       let allChartPreview = await getAllChartPreview();
       this.chartPreviewLinks = allChartPreview.data;
@@ -368,9 +368,10 @@ export default {
       await passChartDetail({
         chartOption: this.chartOption,
         // generate a randoom suffix
-        chartName: `${this.chartName}_${(Math.random() + 1)
-          .toString(36)
-          .substring(4)}`,
+        // chartName: `${this.chartName}_${(Math.random() + 1)
+        //   .toString(36)
+        //   .substring(4)}`,
+        chartName: this.chartName,
         token: getToken(),
       });
       this.$message.success("Chart Uploaded");

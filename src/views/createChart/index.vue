@@ -68,6 +68,7 @@
 import { ak, ask } from "../../../ak.js";
 import AWS from "aws-sdk";
 import { getDataSource, getFileContent } from "@/api/dataSource";
+import { getToken } from "@/utils/auth";
 export default {
   name: "createChart",
   data() {
@@ -109,7 +110,7 @@ export default {
       }
     },
     async passFileName(key) {
-      let res = await getFileContent({ key: key });
+      let res = await getFileContent({ token: getToken(), key: key });
       this.dialogVisible = true;
       this.fileContent = res.data;
       this.total = res.total;
@@ -131,7 +132,7 @@ export default {
       }
     },
     async getBucketList() {
-      let res = await getDataSource();
+      let res = await getDataSource(getToken());
       this.tableData = res.data;
     },
     handleClose() {
