@@ -135,27 +135,6 @@
                 </div>
               </draggable>
             </div>
-            <!-- <div class="col-3">
-              <h3>Sort</h3>
-              <draggable
-                ghostClass="ghost"
-                chosenClass="chosen"
-                animation="300"
-                class="list-group_chartOption_Data"
-                :list="sortList"
-                @add="toggleSort"
-                :group="dataCustomizeField"
-              >
-                <div
-                  class="list-group-item"
-                  v-for="element in sortList"
-                  :key="element.fieldName"
-                  @click="showSort = true"
-                >
-                  {{ element.fieldName }}
-                </div>
-              </draggable>
-            </div> -->
           </div>
         </div>
       </el-aside>
@@ -231,8 +210,8 @@
         <el-radio-button label="High to Low"></el-radio-button>
       </el-radio-group>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="showSort = false">取 消</el-button>
-        <el-button type="primary" @click="applySort">确 定</el-button>
+        <el-button @click="showSort = false">Cancle</el-button>
+        <el-button type="primary" @click="applySort">Confirm</el-button>
       </span>
     </el-dialog>
   </div>

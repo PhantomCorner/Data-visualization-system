@@ -35,6 +35,7 @@ export default {
     this.init();
   },
   methods: {
+    // get all stored chart by user id
     async init() {
       let res = await getAllChart({ token: getToken() });
       console.log(res);
@@ -46,13 +47,7 @@ export default {
         });
       });
     },
-    createChart() {
-      let last = this.list[this.list.length - 1];
-      this.list.push({
-        head: last.head + 1,
-        content: `Card ${last.head + 1}`,
-      });
-    },
+
     addCard() {
       let last = this.list[this.list.length - 1];
       this.list.push({
