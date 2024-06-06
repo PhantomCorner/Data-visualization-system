@@ -77,7 +77,7 @@ export default {
       handler: function (newVal, oldVal) {
         this.init();
       },
-      immediate: true, // 定义的时候就执行一次
+      immediate: true,
     },
   },
   mounted() {
@@ -119,32 +119,32 @@ export default {
       let that = this;
       if (this.timer) return false;
 
-      // 拷贝一份list，并加上后续要使用的属性；
+      // Copy a list and add the attributes to be used later
       let itemList = that.list.map((item) => {
-        // 如果ref是动态赋的值，存入$refs中会是一个数组；
         let dom = this.$refs[item.dragCard_id][0];
         let left = parseInt(dom.style.left.slice(0, dom.style.left.length - 2));
         let top = parseInt(dom.style.top.slice(0, dom.style.top.length - 2));
-        let isMoveing = false; // 标记正在移动的卡片，正在移动的卡片不参与碰撞检测
+        let isMoveing = false; // Mark the moving card. The moving card does not participate in collision detection.
         return { ...item, dom, left, top, isMoveing };
       });
 
-      // 当前卡片对象用的比较多，用一个别名curItem把他存起来；
+      // Store the current selected card as curItem
       let curItem = itemList.find(
         (item) => item.dragCard_id === optionItem.dragCard_id
       );
       curItem.dom.style.transition = "none";
       curItem.dom.style.zIndex = "100";
       curItem.dom.childNodes[0].style.boxShadow = "0 0 5px rgba(0, 0, 0, 0.1)";
-      curItem.startLeft = curItem.left; // 起始的left
-      curItem.startTop = curItem.top; // 起始的top
-      curItem.OffsetLeft = 0; // left的偏移量
-      curItem.OffsetTop = 0; // top的偏移量
+      // Current coord data
+      curItem.startLeft = curItem.left;
+      curItem.startTop = curItem.top;
+      curItem.OffsetLeft = 0;
+      curItem.OffsetTop = 0;
 
-      // 即将交换位置的对象
+      // Target item
       let targetItem = null;
 
-      // 记录鼠标起始位置
+      // Mouse original position
       let mousePosition = {
         startX: e.screenX,
         startY: e.screenY,
@@ -153,16 +153,15 @@ export default {
       document.addEventListener("mousemove", handleMousemove);
       document.addEventListener("mouseup", handleMouseUp);
 
-      // 节流定时器
       let DectetTimer = null;
 
-      // 鼠标移动
+      // Handle mouse movement
       function handleMousemove(e) {
         curItem.OffsetLeft = parseInt(e.screenX - mousePosition.startX);
         curItem.OffsetTop = parseInt(e.screenY - mousePosition.startY);
         curItem.dom.style.left = curItem.startLeft + curItem.OffsetLeft + "px";
         curItem.dom.style.top = curItem.startTop + curItem.OffsetTop + "px";
-        // 碰撞检测，做一下节流
+        // Collision detection with timeout, reduce overflow
         if (!DectetTimer) {
           DectetTimer = setTimeout(() => {
             cardDetect();
@@ -172,16 +171,16 @@ export default {
         }
       }
 
-      // 卡片移动检测
+      // Card movement detection
       function cardDetect() {
-        // 根据移动的距离计算出移动到哪一个位置
+        // Calculate the position to move based on the distance moved
         let colNum = Math.round(curItem.OffsetLeft / that.itemWidth);
         let rowNum = Math.round(curItem.OffsetTop / that.itemHeight);
-        // 这里的dragCard_index需要用到最初点击卡片的位置，因为curItem在后续的卡片交换中dragCard_index已经改变；
+        // The dragCard_index here needs to use the initial position of the clicked card because curItem's dragCard_index has already changed during the subsequent card exchange
         let targetItemDragCardIndex =
           optionItem.dragCard_index + colNum + rowNum * that.col;
 
-        // 超出行列，目标位置不变或不存在都直接return；
+        // Exceeding rows and columns, target position unchanged or does not exist, directly return
         if (
           Math.abs(colNum) >= that.col ||
           Math.abs(rowNum) >= that.row ||
@@ -197,23 +196,23 @@ export default {
           (item) => item.dragCard_index === targetItemDragCardIndex
         );
         item.isMoveing = true;
-        // 将目标卡片拷贝一份，主要是为了松开鼠标的时候赋值给当前卡片；
+        // Copy the target card, so when the mouseup function triggers the current card can have its value
         targetItem = { ...item };
         swicthPosition();
       }
 
       /*
-       * 卡片交换
-       * 卡片交换分为两种情况；
-       *   1. 当目标位置比当前移动卡片的原位置大的时候，相隔的卡片和目标卡片都要后移一个位置；
-       *   2. 当目标位置比当前移动卡片的原位置小的时候，相隔的卡片和目标卡片都要前移一个位置；
-       * 注意：
-       *   1. 这里有个注意的点是当我们移动的时候，我们拿的是前一个或者后一个的值，所以我们遍历数组的时候要注意从目标值开始遍历；
-       *   2. itemList是list的备份，当我们修改了卡片的dragCard_index之后，需要同步到list中；
-       * */
+       * Card position exchange
+       * Two cases;
+       * 1. When the target position is after the original position of the current moving card, the separated cards and the target card should move back one position;
+       * 2. When the target position is before the original position of the current moving card, the separated cards and the target card should move forward one position;
+       * Note:
+       * 1. One point to note here is that when we move, we take the previous or next value, so when we traverse the array, we must pay attention to traversing from the target value;
+       * 2. itemList is a backup of the list. When we modify the dragCard_index of the card, we need to synchronize it to the list;
+       */
       function swicthPosition() {
         const dragCardIndexList = itemList.map((item) => item.dragCard_index);
-        // 目标卡片位置大于当前卡片位置；
+        // If target card location is after current card
         if (targetItem.dragCard_index > curItem.dragCard_index) {
           for (
             let i = targetItem.dragCard_index;
@@ -235,7 +234,7 @@ export default {
             }, 300);
           }
         }
-        // 目标卡片位置小于当前卡片位置；
+        // If target card location is before current card
         if (targetItem.dragCard_index < curItem.dragCard_index) {
           for (
             let i = targetItem.dragCard_index;
@@ -266,13 +265,13 @@ export default {
           itemList.map((item) => item.dragCard_index)
         );
       }
-
+      // If mouse up
       function handleMouseUp() {
-        //移除所有监听
+        // Remove all listeners
         document.removeEventListener("mousemove", handleMousemove);
         document.removeEventListener("mouseup", handleMouseUp);
 
-        // 清除检测的定时器并做最后一次碰撞检测
+        // Clear timer and detect card collision one more time
         clearTimeout(DectetTimer);
         DectetTimer = null;
         cardDetect();
@@ -295,6 +294,7 @@ export default {
         }, 300);
       }
     },
+    // Add drop chart function
     async clickDelete(id) {
       this.$confirm("Are you sure you want to drop this chart?", "Warning", {
         confirmButtonText: "Confirm",
@@ -309,17 +309,6 @@ export default {
         .catch(() => {
           this.$message.warning(`Operation cancelled`);
         });
-      // this.$confirm("Are you sure you want to drop this chart?", "Warning", {
-      //   confirmButtonText: "Confirm",
-      //   cancelButtonText: "Cancel",
-      //   type: "warning",
-      // })
-      //   .then(() => {
-      //     dropChart({ chartID: id });
-      //   })
-      //   .catch(() => {
-      //     this.$message.warning(`Request cancelled`);
-      //   });
     },
   },
 };

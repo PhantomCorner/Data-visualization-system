@@ -97,6 +97,7 @@ export default {
     this.getBucketList();
   },
   methods: {
+    // store file key
     storeKey(row) {
       this.fileKey = row.Key;
     },

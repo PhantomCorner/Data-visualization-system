@@ -4,7 +4,7 @@
       Current User: {{ name }}
     </div> -->
     <router-link to="/createChart/all">
-      <el-button type="primary">Create new chart</el-button>
+      <el-button type="primary">Create visualzation</el-button>
     </router-link>
     <!-- <el-button type="primary" @click="addCard">Creaet new chart</el-button> -->
     <DragCard :list="list" :col="3" :itemWidth="450" :itemHeight="300">
